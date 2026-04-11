@@ -2,6 +2,4 @@ streamlit
 librosa
 numpy
 pandas
-requests
 pydub
-ffmpeg-python
