@@ -1,10 +1,11 @@
 import tempfile
-import numpy as np
-import streamlit as st
+
 import librosa
+import numpy as np
 import parselmouth
-from parselmouth.praat import call
+import streamlit as st
 from audio_recorder_streamlit import audio_recorder
+from parselmouth.praat import call
 
 
 # =========================================================
@@ -27,44 +28,99 @@ st.markdown(
 <style>
 
 .block-container {
-    max-width: 820px;
+    max-width: 800px;
     padding-top: 2rem;
     padding-bottom: 4rem;
 }
 
 .main-title {
-    font-size: 2.2rem;
+    font-size: 2.15rem;
     font-weight: 800;
     letter-spacing: -0.04em;
-    margin-bottom: 0.2rem;
+    margin-bottom: 0.25rem;
 }
 
 .sub-title {
-    font-size: 1rem;
+    font-size: 0.98rem;
     color: #666;
     margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.step-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #777;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+}
+
+.step-title {
+    font-size: 1.7rem;
+    font-weight: 800;
+    margin-bottom: 16px;
 }
 
 .guide-box {
-    background: #f5f6f8;
+    background: #f6f7f9;
+    padding: 18px 20px;
     border-radius: 14px;
-    padding: 20px 22px;
-    line-height: 1.7;
-    margin-bottom: 20px;
+    line-height: 1.75;
+    margin-bottom: 24px;
+}
+
+.recorder-card {
+    border: 1px solid #e3e5e8;
+    border-radius: 18px;
+    padding: 26px 20px 22px 20px;
+    text-align: center;
+    background: white;
+    margin-bottom: 18px;
+}
+
+.recorder-ready {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.recorder-help {
+    font-size: 0.9rem;
+    color: #777;
+    margin-bottom: 8px;
+}
+
+.complete-box {
+    background: #eef9f2;
+    border: 1px solid #cae8d4;
+    padding: 16px 18px;
+    border-radius: 13px;
+    margin: 14px 0;
+}
+
+.complete-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+}
+
+.complete-time {
+    color: #2d7b4b;
+    font-size: 0.95rem;
+    margin-top: 4px;
 }
 
 .result-good {
     background: #eaf7ef;
     border: 1px solid #b8e1c6;
-    border-radius: 16px;
+    border-radius: 18px;
     padding: 28px;
     margin: 20px 0;
 }
 
 .result-mid {
     background: #fff7e6;
-    border: 1px solid #f1d28c;
-    border-radius: 16px;
+    border: 1px solid #efd28e;
+    border-radius: 18px;
     padding: 28px;
     margin: 20px 0;
 }
@@ -72,21 +128,20 @@ st.markdown(
 .result-bad {
     background: #fff0f0;
     border: 1px solid #efc0c0;
-    border-radius: 16px;
+    border-radius: 18px;
     padding: 28px;
     margin: 20px 0;
 }
 
 .result-title {
-    font-size: 1.65rem;
+    font-size: 1.55rem;
     font-weight: 800;
-    margin-bottom: 8px;
 }
 
 .result-value {
     font-size: 2.8rem;
-    font-weight: 800;
-    margin: 8px 0;
+    font-weight: 900;
+    margin: 5px 0;
 }
 
 .result-description {
@@ -95,16 +150,15 @@ st.markdown(
 }
 
 .reason-box {
-    border: 1px solid #ddd;
-    border-radius: 14px;
+    border: 1px solid #e1e1e1;
+    border-radius: 15px;
     padding: 20px;
     margin-top: 18px;
 }
 
-.reason-title {
-    font-size: 1.05rem;
-    font-weight: 700;
-    margin-bottom: 12px;
+.big-number {
+    font-size: 2rem;
+    font-weight: 800;
 }
 
 </style>
@@ -114,11 +168,11 @@ st.markdown(
 
 
 # =========================================================
-# SESSION STATE
+# SESSION
 # =========================================================
 
 defaults = {
-    "step": 1,
+    "page": "baseline_record",
     "baseline_audio": None,
     "target_audio": None,
     "baseline_recorder_id": 0,
@@ -131,8 +185,32 @@ for key, value in defaults.items():
 
 
 # =========================================================
-# UTILITIES
+# AUDIO UTILS
 # =========================================================
+
+def audio_duration(audio_bytes):
+
+    if not audio_bytes:
+        return 0.0
+
+    with tempfile.NamedTemporaryFile(
+        suffix=".wav",
+        delete=True
+    ) as tmp:
+
+        tmp.write(audio_bytes)
+        tmp.flush()
+
+        y, sr = librosa.load(
+            tmp.name,
+            sr=None,
+            mono=True
+        )
+
+        return float(
+            len(y) / sr
+        )
+
 
 def safe_value(value):
 
@@ -142,7 +220,7 @@ def safe_value(value):
         if np.isfinite(value):
             return value
 
-    except:
+    except Exception:
         pass
 
     return np.nan
@@ -221,10 +299,6 @@ def analyze_audio(audio_bytes):
         tmp.write(audio_bytes)
         tmp.flush()
 
-        # -------------------------
-        # LOAD
-        # -------------------------
-
         y, sr = librosa.load(
             tmp.name,
             sr=None,
@@ -236,21 +310,22 @@ def analyze_audio(audio_bytes):
             top_db=35
         )
 
-        duration = len(y) / sr
+        duration = (
+            len(y) / sr
+        )
 
         if duration < 1.0:
-
             raise ValueError(
                 "발성이 너무 짧습니다. "
-                "약 2~4초 동안 발성해 주세요."
+                "2~4초 정도 발성해 주세요."
             )
 
-        # 음량 자체의 영향을 줄이기 위해 정규화
+        # 녹음 음량 차이의 영향을 줄임
         y = librosa.util.normalize(y)
 
-        # -------------------------
-        # PRAAT F0
-        # -------------------------
+        # -------------------------------------------------
+        # F0
+        # -------------------------------------------------
 
         sound = parselmouth.Sound(
             tmp.name
@@ -274,9 +349,9 @@ def analyze_audio(audio_bytes):
 
         f0 = safe_value(f0)
 
-        # -------------------------
+        # -------------------------------------------------
         # SPECTRUM
-        # -------------------------
+        # -------------------------------------------------
 
         spectrum = np.abs(
             librosa.stft(
@@ -286,7 +361,9 @@ def analyze_audio(audio_bytes):
             )
         )
 
-        power = spectrum ** 2
+        power = (
+            spectrum ** 2
+        )
 
         mean_power = np.mean(
             power,
@@ -306,7 +383,7 @@ def analyze_audio(audio_bytes):
             500
         )
 
-        # 전체 스펙트럼 무게 중심
+        # 스펙트럼 중심
         centroid = float(
             np.mean(
                 librosa.feature.spectral_centroid(
@@ -325,7 +402,7 @@ def analyze_audio(audio_bytes):
 
 
 # =========================================================
-# CHEST RESONANCE JUDGEMENT
+# CHEST RESONANCE
 # =========================================================
 
 def judge_chest_resonance(
@@ -333,20 +410,10 @@ def judge_chest_resonance(
     target
 ):
 
-    # -------------------------------------------------
-    # 1. 가슴 관련 저역 에너지 변화
-    # -------------------------------------------------
-
     low_gain = percent_change(
         baseline["low_ratio"],
         target["low_ratio"]
     )
-
-    # -------------------------------------------------
-    # 2. 스펙트럼 중심 변화
-    #
-    # 중심이 낮아질수록 양수로 계산
-    # -------------------------------------------------
 
     centroid_change = (
         (
@@ -360,20 +427,12 @@ def judge_chest_resonance(
         100
     )
 
-    # -------------------------------------------------
-    # 3. 음높이 변화
-    # -------------------------------------------------
-
     f0_change = abs(
         percent_change(
             baseline["f0"],
             target["f0"]
         )
     )
-
-    # -------------------------------------------------
-    # 이상치 방지
-    # -------------------------------------------------
 
     low_gain = float(
         np.clip(
@@ -391,14 +450,7 @@ def judge_chest_resonance(
         )
     )
 
-    # -------------------------------------------------
-    # 가슴 공명 변화 지수
-    #
-    # 핵심:
-    # 저역 에너지 변화 80%
-    # 스펙트럼 중심 변화 20%
-    # -------------------------------------------------
-
+    # 1차 연구용 가슴 공명 지수
     chest_index = (
         low_gain * 0.8
         +
@@ -413,29 +465,20 @@ def judge_chest_resonance(
         )
     )
 
-    # -------------------------------------------------
-    # 음높이가 너무 달라지면 신뢰도 낮음
-    # -------------------------------------------------
-
     pitch_unstable = (
         np.isfinite(f0_change)
-        and
-        f0_change > 15
+        and f0_change > 15
     )
-
-    # -------------------------------------------------
-    # 판정
-    # -------------------------------------------------
 
     if pitch_unstable:
 
         status = "retry"
-        title = "다시 측정하는 것이 좋습니다"
+        title = "다시 측정해 주세요"
         css = "result-mid"
 
         message = (
-            "두 발성의 음높이 차이가 커서 "
-            "가슴 공명 변화만을 정확하게 비교하기 어렵습니다."
+            "두 발성의 음높이가 너무 달라 "
+            "가슴 공명만의 변화를 정확히 판단하기 어렵습니다."
         )
 
     elif chest_index >= 10:
@@ -457,7 +500,7 @@ def judge_chest_resonance(
 
         message = (
             "가슴 공명 변화가 나타나고 있습니다. "
-            "현재 방향을 유지하면서 울림을 조금 더 확장해 보세요."
+            "현재 방향을 유지하면서 울림을 조금 더 만들어 보세요."
         )
 
     elif chest_index > -3:
@@ -468,13 +511,13 @@ def judge_chest_resonance(
 
         message = (
             "기준 발성과 비교했을 때 "
-            "가슴 공명이 뚜렷하게 강화되지는 않았습니다."
+            "가슴 공명이 충분히 강화되지는 않았습니다."
         )
 
     else:
 
         status = "bad"
-        title = "가슴 공명이 오히려 감소했습니다"
+        title = "가슴 공명이 감소했습니다"
         css = "result-bad"
 
         message = (
@@ -499,52 +542,83 @@ def judge_chest_resonance(
 # =========================================================
 
 st.markdown(
-    '<div class="main-title">'
-    '🎙️ 가슴 공명 훈련'
-    '</div>',
+    """
+<div class="main-title">
+🎙️ 가슴 공명 훈련
+</div>
+""",
     unsafe_allow_html=True,
 )
 
 st.markdown(
-    '<div class="sub-title">'
-    '나의 평소 발성과 비교하여 가슴 공명이 얼마나 강화되었는지 확인합니다.'
-    '</div>',
+    """
+<div class="sub-title">
+나의 평소 발성과 비교하여 가슴 공명이
+얼마나 강화되었는지 확인합니다.
+</div>
+""",
     unsafe_allow_html=True,
 )
 
 
 # =========================================================
-# STEP 1
+# PAGE 1 : BASELINE RECORD
 # =========================================================
 
-if st.session_state.step == 1:
+if st.session_state.page == "baseline_record":
 
     st.markdown(
-        "## STEP 1. 기준 발성"
+        '<div class="step-label">STEP 1</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<div class="step-title">기준 발성 녹음</div>',
+        unsafe_allow_html=True,
     )
 
     st.markdown(
         """
 <div class="guide-box">
 
-<b>평소처럼 편안하게 /아/를 발성하세요.</b><br><br>
+<b>평소처럼 편안한 /아/를 녹음하세요.</b><br><br>
 
-특정 부위에 울림을 만들려고 하지 말고<br>
-가장 자연스러운 목소리로 약 <b>2~4초</b> 동안 발성합니다.
+특정 공명을 만들려고 하지 말고
+가장 자연스러운 목소리를 사용합니다.<br>
+
+약 <b>2~4초</b> 동안 일정하게 유지하세요.
 
 </div>
 """,
         unsafe_allow_html=True,
     )
 
-    baseline_recording = audio_recorder(
+    st.markdown(
+        """
+<div class="recorder-card">
+
+<div class="recorder-ready">
+🎙️ 녹음 준비
+</div>
+
+<div class="recorder-help">
+아래 마이크 버튼을 누르면 녹음이 시작됩니다.<br>
+다시 누르면 녹음이 종료됩니다.
+</div>
+
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+
+    recording = audio_recorder(
         text="",
-        recording_color="#e74c3c",
-        neutral_color="#444444",
+        recording_color="#E53935",
+        neutral_color="#374151",
         icon_name="microphone",
-        icon_size="2x",
+        icon_size="3x",
         key=(
-            "baseline_"
+            "baseline_recorder_"
             +
             str(
                 st.session_state.baseline_recorder_id
@@ -552,61 +626,133 @@ if st.session_state.step == 1:
         ),
     )
 
-    if baseline_recording:
+    if recording:
 
         st.session_state.baseline_audio = (
-            bytes(
-                baseline_recording
-            )
+            bytes(recording)
         )
 
-    if st.session_state.baseline_audio:
-
-        st.audio(
-            st.session_state.baseline_audio,
-            format="audio/wav"
+        st.session_state.page = (
+            "baseline_review"
         )
 
-        st.success(
-            "기준 발성 녹음 완료"
-        )
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-
-            if st.button(
-                "🔄 다시 녹음",
-                use_container_width=True
-            ):
-
-                st.session_state.baseline_audio = None
-
-                st.session_state.baseline_recorder_id += 1
-
-                st.rerun()
-
-        with col2:
-
-            if st.button(
-                "다음 단계 ➡️",
-                type="primary",
-                use_container_width=True
-            ):
-
-                st.session_state.step = 2
-
-                st.rerun()
+        st.rerun()
 
 
 # =========================================================
-# STEP 2
+# PAGE 2 : BASELINE REVIEW
 # =========================================================
 
-elif st.session_state.step == 2:
+elif st.session_state.page == "baseline_review":
+
+    duration = audio_duration(
+        st.session_state.baseline_audio
+    )
 
     st.markdown(
-        "## STEP 2. 가슴 공명 발성"
+        '<div class="step-label">STEP 1</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<div class="step-title">기준 발성 확인</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        f"""
+<div class="complete-box">
+
+<div class="complete-title">
+✅ 녹음 완료
+</div>
+
+<div class="complete-time">
+녹음 길이 · {duration:.1f}초
+</div>
+
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        "#### ▶ 녹음 들어보기"
+    )
+
+    st.audio(
+        st.session_state.baseline_audio,
+        format="audio/wav"
+    )
+
+    if duration < 1.5:
+
+        st.warning(
+            "녹음이 조금 짧습니다. "
+            "2~4초 정도로 다시 녹음하는 것을 권장합니다."
+        )
+
+    elif duration > 6:
+
+        st.warning(
+            "녹음이 조금 깁니다. "
+            "2~4초 정도로 녹음하면 비교가 더 안정적입니다."
+        )
+
+    else:
+
+        st.success(
+            "녹음 길이가 적절합니다."
+        )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        if st.button(
+            "🔄 다시 녹음",
+            use_container_width=True
+        ):
+
+            st.session_state.baseline_audio = None
+
+            st.session_state.baseline_recorder_id += 1
+
+            st.session_state.page = (
+                "baseline_record"
+            )
+
+            st.rerun()
+
+    with col2:
+
+        if st.button(
+            "이 녹음 사용하기 ➡️",
+            type="primary",
+            use_container_width=True
+        ):
+
+            st.session_state.page = (
+                "target_record"
+            )
+
+            st.rerun()
+
+
+# =========================================================
+# PAGE 3 : TARGET RECORD
+# =========================================================
+
+elif st.session_state.page == "target_record":
+
+    st.markdown(
+        '<div class="step-label">STEP 2</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<div class="step-title">가슴 공명 발성 녹음</div>',
+        unsafe_allow_html=True,
     )
 
     st.markdown(
@@ -615,10 +761,11 @@ elif st.session_state.step == 2:
 
 <b>이번에는 가슴 공명을 의도해 /아/를 발성하세요.</b><br><br>
 
-STEP 1과 가능한 한 <b>같은 음높이와 비슷한 크기</b>로 발성합니다.<br><br>
+기준 발성과 가능한 한
+<b>같은 음높이와 비슷한 크기</b>를 유지합니다.<br><br>
 
-음높이를 일부러 낮추지 말고,<br>
-가슴 쪽 울림만 더 풍부하게 만든다고 생각해 보세요.<br><br>
+음을 일부러 낮추지 말고,
+가슴 쪽의 울림만 더 풍부하게 만든다고 생각하세요.<br>
 
 약 <b>2~4초</b> 동안 유지합니다.
 
@@ -627,14 +774,32 @@ STEP 1과 가능한 한 <b>같은 음높이와 비슷한 크기</b>로 발성합
         unsafe_allow_html=True,
     )
 
-    target_recording = audio_recorder(
+    st.markdown(
+        """
+<div class="recorder-card">
+
+<div class="recorder-ready">
+🎙️ 가슴 공명 녹음 준비
+</div>
+
+<div class="recorder-help">
+마이크 버튼을 누르면 녹음이 시작됩니다.<br>
+녹음 중에는 버튼이 빨간색으로 표시됩니다.
+</div>
+
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+
+    recording = audio_recorder(
         text="",
-        recording_color="#e74c3c",
-        neutral_color="#444444",
+        recording_color="#E53935",
+        neutral_color="#374151",
         icon_name="microphone",
-        icon_size="2x",
+        icon_size="3x",
         key=(
-            "target_"
+            "target_recorder_"
             +
             str(
                 st.session_state.target_recorder_id
@@ -642,56 +807,22 @@ STEP 1과 가능한 한 <b>같은 음높이와 비슷한 크기</b>로 발성합
         ),
     )
 
-    if target_recording:
+    if recording:
 
         st.session_state.target_audio = (
-            bytes(
-                target_recording
-            )
+            bytes(recording)
         )
 
-    if st.session_state.target_audio:
-
-        st.audio(
-            st.session_state.target_audio,
-            format="audio/wav"
+        st.session_state.page = (
+            "target_review"
         )
 
-        st.success(
-            "가슴 공명 발성 녹음 완료"
-        )
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-
-            if st.button(
-                "🔄 다시 녹음",
-                use_container_width=True
-            ):
-
-                st.session_state.target_audio = None
-
-                st.session_state.target_recorder_id += 1
-
-                st.rerun()
-
-        with col2:
-
-            if st.button(
-                "결과 확인 ➡️",
-                type="primary",
-                use_container_width=True
-            ):
-
-                st.session_state.step = 3
-
-                st.rerun()
+        st.rerun()
 
     st.write("")
 
     if st.button(
-        "⬅️ 기준 발성부터 다시"
+        "⬅️ 기준 발성 다시 녹음"
     ):
 
         st.session_state.baseline_audio = None
@@ -700,25 +831,133 @@ STEP 1과 가능한 한 <b>같은 음높이와 비슷한 크기</b>로 발성합
         st.session_state.baseline_recorder_id += 1
         st.session_state.target_recorder_id += 1
 
-        st.session_state.step = 1
+        st.session_state.page = (
+            "baseline_record"
+        )
 
         st.rerun()
 
 
 # =========================================================
-# STEP 3
+# PAGE 4 : TARGET REVIEW
 # =========================================================
 
-elif st.session_state.step == 3:
+elif st.session_state.page == "target_review":
+
+    duration = audio_duration(
+        st.session_state.target_audio
+    )
 
     st.markdown(
-        "## STEP 3. 가슴 공명 결과"
+        '<div class="step-label">STEP 2</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<div class="step-title">가슴 공명 발성 확인</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        f"""
+<div class="complete-box">
+
+<div class="complete-title">
+✅ 녹음 완료
+</div>
+
+<div class="complete-time">
+녹음 길이 · {duration:.1f}초
+</div>
+
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        "#### ▶ 녹음 들어보기"
+    )
+
+    st.audio(
+        st.session_state.target_audio,
+        format="audio/wav"
+    )
+
+    if duration < 1.5:
+
+        st.warning(
+            "녹음이 조금 짧습니다. "
+            "2~4초 정도로 다시 녹음하는 것을 권장합니다."
+        )
+
+    elif duration > 6:
+
+        st.warning(
+            "녹음이 조금 깁니다. "
+            "2~4초 정도로 녹음하면 비교가 더 안정적입니다."
+        )
+
+    else:
+
+        st.success(
+            "녹음 길이가 적절합니다."
+        )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        if st.button(
+            "🔄 다시 녹음",
+            use_container_width=True
+        ):
+
+            st.session_state.target_audio = None
+
+            st.session_state.target_recorder_id += 1
+
+            st.session_state.page = (
+                "target_record"
+            )
+
+            st.rerun()
+
+    with col2:
+
+        if st.button(
+            "이 녹음 분석하기 ➡️",
+            type="primary",
+            use_container_width=True
+        ):
+
+            st.session_state.page = (
+                "result"
+            )
+
+            st.rerun()
+
+
+# =========================================================
+# PAGE 5 : RESULT
+# =========================================================
+
+elif st.session_state.page == "result":
+
+    st.markdown(
+        '<div class="step-label">STEP 3</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<div class="step-title">가슴 공명 결과</div>',
+        unsafe_allow_html=True,
     )
 
     try:
 
         with st.spinner(
-            "가슴 공명 변화를 분석하고 있습니다..."
+            "두 발성을 비교하고 있습니다..."
         ):
 
             baseline = analyze_audio(
@@ -734,16 +973,16 @@ elif st.session_state.step == 3:
                 target
             )
 
-        # -------------------------------------------------
-        # MAIN RESULT
-        # -------------------------------------------------
-
         index = result["index"]
 
         if index >= 0:
-            index_text = f"+{index:.1f}%"
+            index_text = (
+                f"+{index:.1f}%"
+            )
         else:
-            index_text = f"{index:.1f}%"
+            index_text = (
+                f"{index:.1f}%"
+            )
 
         st.markdown(
             f"""
@@ -767,11 +1006,11 @@ elif st.session_state.step == 3:
         )
 
         # -------------------------------------------------
-        # SIMPLE VISUAL
+        # SIMPLE COMPARISON
         # -------------------------------------------------
 
         st.markdown(
-            "### 가슴 관련 저역 에너지"
+            "### 기준 발성과 비교"
         )
 
         baseline_low = (
@@ -780,6 +1019,12 @@ elif st.session_state.step == 3:
 
         target_low = (
             target["low_ratio"]
+        )
+
+        change_pp = (
+            target_low
+            -
+            baseline_low
         )
 
         col1, col2 = st.columns(2)
@@ -793,31 +1038,22 @@ elif st.session_state.step == 3:
 
         with col2:
 
-            change = (
-                target_low
-                -
-                baseline_low
-            )
-
             st.metric(
                 "가슴 공명 발성",
                 f"{target_low:.1f}%",
-                delta=f"{change:+.1f}%p"
+                delta=f"{change_pp:+.1f}%p"
             )
 
-        st.write("")
-
         # -------------------------------------------------
-        # REASONS
+        # REASON
         # -------------------------------------------------
 
         st.markdown(
-            """
-<div class="reason-box">
-<div class="reason-title">
-왜 이렇게 판단했나요?
-</div>
-""",
+            "### 왜 이렇게 판단했나요?"
+        )
+
+        st.markdown(
+            '<div class="reason-box">',
             unsafe_allow_html=True,
         )
 
@@ -836,33 +1072,33 @@ elif st.session_state.step == 3:
         if low_gain > 3:
 
             st.write(
-                f"✅ 가슴 공명과 관련된 저역 에너지 비율이 "
-                f"기준 발성보다 **{low_gain:.1f}% 증가**했습니다."
+                "✅ 가슴 공명과 관련된 "
+                f"저역 에너지 비율이 **{low_gain:.1f}% 증가**했습니다."
             )
 
         elif low_gain < -3:
 
             st.write(
-                f"❌ 가슴 공명과 관련된 저역 에너지 비율이 "
-                f"기준 발성보다 **{abs(low_gain):.1f}% 감소**했습니다."
+                "❌ 가슴 공명과 관련된 "
+                f"저역 에너지 비율이 **{abs(low_gain):.1f}% 감소**했습니다."
             )
 
         else:
 
             st.write(
-                "➖ 가슴 관련 저역 에너지의 변화가 크지 않습니다."
+                "➖ 가슴 관련 저역 에너지 변화가 크지 않습니다."
             )
 
         if centroid_change > 3:
 
             st.write(
-                "✅ 소리의 에너지 중심이 낮은 쪽으로 이동했습니다."
+                "✅ 전체 소리의 에너지 중심도 낮은 쪽으로 이동했습니다."
             )
 
         elif centroid_change < -3:
 
             st.write(
-                "➖ 소리의 에너지 중심은 오히려 높은 쪽으로 이동했습니다."
+                "➖ 전체 소리의 에너지 중심은 높은 쪽으로 이동했습니다."
             )
 
         else:
@@ -876,22 +1112,23 @@ elif st.session_state.step == 3:
             if f0_change <= 8:
 
                 st.write(
-                    f"✅ 두 발성의 음높이 차이는 "
-                    f"**{f0_change:.1f}%**로 비교적 안정적입니다."
+                    "✅ 두 발성의 음높이 차이가 "
+                    f"**{f0_change:.1f}%**로 안정적입니다."
                 )
 
             elif f0_change <= 15:
 
                 st.write(
-                    f"⚠️ 두 발성의 음높이가 "
+                    "⚠️ 두 발성의 음높이가 "
                     f"**{f0_change:.1f}%** 차이납니다."
                 )
 
             else:
 
                 st.write(
-                    f"⚠️ 음높이가 **{f0_change:.1f}%** 달라 "
-                    f"공명만의 변화로 보기 어렵습니다."
+                    "⚠️ 두 발성의 음높이가 "
+                    f"**{f0_change:.1f}%** 달라 "
+                    "공명만의 변화로 보기 어렵습니다."
                 )
 
         st.markdown(
@@ -900,41 +1137,40 @@ elif st.session_state.step == 3:
         )
 
         # -------------------------------------------------
-        # TRAINING TIP
+        # TIP
         # -------------------------------------------------
 
         st.markdown(
-            "### 다음 발성에서 해볼 것"
+            "### 다음 발성"
         )
 
         if result["status"] == "good":
 
             st.success(
                 "지금 만든 울림의 느낌을 기억하세요. "
-                "음높이를 유지하면서 같은 울림을 다시 재현해 보세요."
+                "같은 음높이를 유지하면서 다시 재현해 보세요."
             )
 
         elif result["status"] == "mid":
 
             st.info(
                 "방향은 맞습니다. "
-                "목소리를 억지로 낮추지 말고 "
-                "현재 울림을 조금 더 풍부하게 만들어 보세요."
+                "음을 낮추지 않고 가슴 쪽 울림만 "
+                "조금 더 풍부하게 만들어 보세요."
             )
 
         elif result["status"] == "retry":
 
             st.warning(
-                "공명보다 음높이가 많이 달라졌습니다. "
-                "기준 발성과 같은 높이의 /아/를 다시 만들어 보세요."
+                "기준 발성과 같은 음높이로 다시 발성해 보세요."
             )
 
         else:
 
             st.info(
-                "음을 낮추려고 하기보다 "
+                "음을 낮추는 것보다 "
                 "기준 발성의 음높이를 유지하면서 "
-                "가슴 쪽에서 느껴지는 울림을 확장해 보세요."
+                "가슴에서 느껴지는 울림을 확장해 보세요."
             )
 
         # -------------------------------------------------
@@ -946,59 +1182,43 @@ elif st.session_state.step == 3:
         ):
 
             st.write(
-                f"기준 F0: {baseline['f0']:.1f} Hz"
+                f"기준 F0 : {baseline['f0']:.1f} Hz"
             )
 
             st.write(
-                f"훈련 F0: {target['f0']:.1f} Hz"
+                f"훈련 F0 : {target['f0']:.1f} Hz"
             )
 
             st.write(
-                f"기준 저역 비율: {baseline['low_ratio']:.2f}%"
+                f"음높이 차이 : {result['f0_change']:.2f}%"
             )
 
             st.write(
-                f"훈련 저역 비율: {target['low_ratio']:.2f}%"
+                f"기준 저역 비율 : {baseline['low_ratio']:.2f}%"
             )
 
             st.write(
-                f"저역 변화율: {result['low_gain']:+.2f}%"
+                f"훈련 저역 비율 : {target['low_ratio']:.2f}%"
             )
 
             st.write(
-                f"기준 Spectral Centroid: "
+                f"저역 변화율 : {result['low_gain']:+.2f}%"
+            )
+
+            st.write(
+                f"기준 Spectral Centroid : "
                 f"{baseline['centroid']:.1f} Hz"
             )
 
             st.write(
-                f"훈련 Spectral Centroid: "
+                f"훈련 Spectral Centroid : "
                 f"{target['centroid']:.1f} Hz"
             )
 
             st.write(
-                f"Centroid 변화: "
-                f"{result['centroid_change']:+.2f}%"
-            )
-
-            st.write(
-                f"가슴 공명 변화 지수: "
+                f"가슴 공명 변화 지수 : "
                 f"{result['index']:+.2f}"
             )
-
-            st.markdown("---")
-
-            st.caption(
-                "현재 가슴 공명 변화 지수는 "
-                "80–500 Hz 상대 에너지 변화 80%와 "
-                "Spectral Centroid 변화 20%를 결합한 "
-                "1차 연구용 휴리스틱입니다. "
-                "향후 반복 측정 및 학생 데이터를 통해 "
-                "가중치와 판정 기준을 보정합니다."
-            )
-
-        # -------------------------------------------------
-        # BUTTONS
-        # -------------------------------------------------
 
         st.divider()
 
@@ -1015,7 +1235,9 @@ elif st.session_state.step == 3:
 
                 st.session_state.target_recorder_id += 1
 
-                st.session_state.step = 2
+                st.session_state.page = (
+                    "target_record"
+                )
 
                 st.rerun()
 
@@ -1033,7 +1255,9 @@ elif st.session_state.step == 3:
                 st.session_state.baseline_recorder_id += 1
                 st.session_state.target_recorder_id += 1
 
-                st.session_state.step = 1
+                st.session_state.page = (
+                    "baseline_record"
+                )
 
                 st.rerun()
 
@@ -1044,14 +1268,16 @@ elif st.session_state.step == 3:
         )
 
         if st.button(
-            "가슴 공명 다시 녹음"
+            "🎙️ 다시 녹음"
         ):
 
             st.session_state.target_audio = None
 
             st.session_state.target_recorder_id += 1
 
-            st.session_state.step = 2
+            st.session_state.page = (
+                "target_record"
+            )
 
             st.rerun()
 
