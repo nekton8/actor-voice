@@ -4,6 +4,7 @@ import numpy as np
 import plotly.graph_objects as go
 import parselmouth
 from audio_recorder_streamlit import audio_recorder
+import streamlit.components.v1 as components
 
 # 1. 페이지 기본 설정 및 스타일
 st.set_page_config(page_title="연기 발성 5대 공명 진단 시스템", page_icon="🎙️", layout="centered")
@@ -52,7 +53,7 @@ if st.session_state.step == 1:
         st.rerun()
 
 # ==========================================
-# PAGE 2: 실시간 녹음 및 검토
+# PAGE 2: 실시간 녹음 및 남은 시간 카운트다운
 # ==========================================
 elif st.session_state.step == 2:
     st.markdown('<div class="step-header">STEP 2. 발성 녹음 진행</div>', unsafe_allow_html=True)
@@ -62,14 +63,14 @@ elif st.session_state.step == 2:
             <b>📌 정확한 분석을 위한 3가지 수칙</b><br><br>
             1. <b>마이크 거리:</b> 스마트폰/마이크를 입에서 <b>주먹 하나 거리(약 15cm)</b> 띄우세요.<br>
             2. <b>발성 방법:</b> 가장 편안한 톤으로 <b>"에---"</b> 소리를 끊기지 않게 일정하게 내세요.<br>
-            3. <b>녹음 방법:</b> 마이크 버튼을 누르고 <b>5초간 발성</b> 후 버튼을 다시 눌러 중지하세요.
+            3. <b>녹음 시간:</b> 아래 남은 시간이 <b>0초가 될 때까지 5초간 발성을 유지</b>해 주세요.
         </div>
     """, unsafe_allow_html=True)
 
     st.subheader("🎙️ 실시간 음성 녹음")
-    st.caption("아래 대형 마이크 버튼을 누르면 녹음이 시작되며, 5초 동안 넉넉하게 발성해 주세요.")
+    st.caption("마이크를 누르면 녹음 상태(노란색) 변화를 감지하여 5초 남은 시간이 동작합니다.")
 
-    # pause_threshold를 5.0초로 늘려 중간 무음으로 인해 2~3초 만에 꺼지는 현상 방지
+    # 마이크 위젯 (녹음 유지 5초)
     recorded_audio = audio_recorder(
         text="마이크를 눌러 녹음 시작 / 중지",
         recording_color="#e8b62c",
@@ -79,13 +80,62 @@ elif st.session_state.step == 2:
         pause_threshold=5.0,
     )
 
+    # 마이크 상태를 감지해서 실시간 타이머를 출력하는 프론트엔드 주입
+    timer_script = """
+    <div id="recording-timer" style="
+        font-size: 26px; 
+        font-weight: bold; 
+        color: #E74C3C; 
+        text-align: center; 
+        margin-top: 10px;
+        min-height: 40px;
+    "></div>
+
+    <script>
+    let intervalId = null;
+    let timerContainer = document.getElementById('recording-timer');
+
+    function checkMicState() {
+        // 부모 창의 audio_recorder 아이콘 상태 모니터링
+        const parentDoc = window.parent.document;
+        const micIcon = parentDoc.querySelector('svg[data-icon="microphone"]');
+        
+        if (micIcon) {
+            const isRecording = micIcon.style.fill === 'rgb(232, 182, 44)' || micIcon.getAttribute('fill') === '#e8b62c';
+            
+            if (isRecording && !intervalId) {
+                let timeLeft = 5;
+                timerContainer.innerHTML = "🔴 녹음 중... 남은 시간: " + timeLeft + "초";
+                
+                intervalId = setInterval(() => {
+                    timeLeft--;
+                    if (timeLeft >= 0) {
+                        timerContainer.innerHTML = "🔴 녹음 중... 남은 시간: " + timeLeft + "초";
+                    } else {
+                        timerContainer.innerHTML = "✅ 5초 녹음 완료!";
+                        timerContainer.style.color = "#27AE60";
+                        clearInterval(intervalId);
+                    }
+                }, 1000);
+            } else if (!isRecording && intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+        }
+    }
+
+    setInterval(checkMicState, 300);
+    </script>
+    """
+    components.html(timer_script, height=60)
+
     if recorded_audio:
         st.session_state.audio_bytes = recorded_audio
 
     # 녹음 완료 시 플레이어 및 버튼 노출
     if st.session_state.audio_bytes is not None:
         st.write("")
-        st.success("✅ 녹음이 완료되었습니다! 아래에서 미리 들어보실 수 있습니다.")
+        st.success("✅ 녹음이 성공적으로 완료되었습니다! 미리 들어보시고 분석을 진행해 주세요.")
         st.audio(st.session_state.audio_bytes, format="audio/wav")
         
         st.write("")
