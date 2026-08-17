@@ -22,169 +22,297 @@ st.set_page_config(
 
 
 # =========================================================
-# STYLE
+# MOBILE-FIRST STYLE
 # =========================================================
 
 st.markdown(
     """
 <style>
 
+/* =====================================================
+   전체
+   ===================================================== */
+
 .block-container {
-    max-width: 800px;
-    padding-top: 2rem;
-    padding-bottom: 4rem;
+    max-width: 760px;
+    padding-top: 1.2rem;
+    padding-bottom: 2rem;
 }
 
 .main-title {
-    font-size: 2.15rem;
+    font-size: 2rem;
     font-weight: 800;
-    letter-spacing: -0.04em;
-    margin-bottom: 0.25rem;
+    letter-spacing: -0.045em;
+    line-height: 1.15;
+    margin: 0 0 0.25rem 0;
 }
 
 .sub-title {
-    font-size: 0.98rem;
+    font-size: 0.94rem;
     color: #666;
-    margin-bottom: 2rem;
-    line-height: 1.6;
+    line-height: 1.45;
+    margin: 0 0 1.3rem 0;
 }
 
 .step-label {
-    font-size: 0.82rem;
+    font-size: 0.76rem;
     font-weight: 700;
-    color: #777;
-    letter-spacing: 0.06em;
-    margin-bottom: 4px;
+    color: #7a7a7a;
+    letter-spacing: 0.07em;
+    margin: 0 0 0.15rem 0;
 }
 
 .step-title {
-    font-size: 1.7rem;
+    font-size: 1.5rem;
     font-weight: 800;
-    margin-bottom: 16px;
+    line-height: 1.22;
+    margin: 0 0 0.75rem 0;
 }
 
+
+/* =====================================================
+   설명
+   ===================================================== */
+
 .guide-box {
-    background: #f6f7f9;
-    padding: 20px 22px;
-    border-radius: 14px;
-    line-height: 1.75;
-    margin-bottom: 22px;
+    background: #f5f6f8;
+    border-radius: 13px;
+    padding: 14px 17px;
+    margin: 0 0 12px 0;
+    font-size: 0.93rem;
+    line-height: 1.55;
 }
+
+
+/* =====================================================
+   녹음 완료
+   ===================================================== */
 
 .complete-box {
     background: #eef9f2;
     border: 1px solid #cae8d4;
-    padding: 18px 20px;
-    border-radius: 14px;
-    margin: 14px 0 20px 0;
+    padding: 13px 16px;
+    border-radius: 13px;
+    margin: 8px 0 12px 0;
 }
 
 .complete-title {
-    font-size: 1.08rem;
+    font-size: 1rem;
     font-weight: 800;
 }
 
 .complete-time {
+    font-size: 0.88rem;
     color: #2d7b4b;
-    margin-top: 5px;
+    margin-top: 2px;
 }
 
-/* 결과 */
+
+/* =====================================================
+   결과
+   ===================================================== */
+
+.result-good,
+.result-mid,
+.result-bad,
+.result-info {
+    border-radius: 16px;
+    padding: 22px;
+    margin: 12px 0 16px 0;
+}
+
 .result-good {
     background: #eaf7ef;
     border: 1px solid #b8e1c6;
-    border-radius: 18px;
-    padding: 28px;
-    margin: 20px 0;
 }
 
 .result-mid {
     background: #fff7e6;
     border: 1px solid #efd28e;
-    border-radius: 18px;
-    padding: 28px;
-    margin: 20px 0;
 }
 
 .result-bad {
     background: #fff0f0;
     border: 1px solid #efc0c0;
-    border-radius: 18px;
-    padding: 28px;
-    margin: 20px 0;
 }
 
 .result-info {
     background: #eef4ff;
     border: 1px solid #cad9f4;
-    border-radius: 18px;
-    padding: 28px;
-    margin: 20px 0;
 }
 
 .result-title {
-    font-size: 1.6rem;
+    font-size: 1.45rem;
     font-weight: 800;
 }
 
 .result-value {
-    font-size: 3rem;
+    font-size: 2.7rem;
     font-weight: 900;
+    line-height: 1.05;
     margin: 7px 0;
 }
 
 .result-description {
-    font-size: 1rem;
-    line-height: 1.7;
+    font-size: 0.95rem;
+    line-height: 1.55;
 }
 
-/* 비교 카드 */
+
+/* =====================================================
+   기준 / 현재 비교
+   ===================================================== */
+
 .compare-card {
     border: 1px solid #e1e4e8;
-    border-radius: 16px;
-    padding: 22px;
+    border-radius: 14px;
+    padding: 16px 8px;
     text-align: center;
-    min-height: 125px;
+    min-height: 100px;
 }
 
 .compare-label {
-    font-size: 0.9rem;
+    font-size: 0.82rem;
     color: #6f747b;
-    margin-bottom: 7px;
+    margin-bottom: 3px;
 }
 
 .compare-value {
-    font-size: 2rem;
+    font-size: 1.7rem;
     font-weight: 850;
 }
 
 .compare-change-up {
-    font-size: 0.92rem;
+    font-size: 0.82rem;
     font-weight: 700;
     color: #25834a;
-    margin-top: 4px;
+    margin-top: 2px;
 }
 
 .compare-change-down {
-    font-size: 0.92rem;
+    font-size: 0.82rem;
     font-weight: 700;
     color: #c94545;
-    margin-top: 4px;
+    margin-top: 2px;
 }
+
+
+/* =====================================================
+   판단근거 / 팁
+   ===================================================== */
 
 .reason-box {
     border: 1px solid #e1e4e8;
-    border-radius: 16px;
-    padding: 20px 22px;
-    margin: 14px 0 22px 0;
+    border-radius: 14px;
+    padding: 15px 16px;
+    margin: 8px 0 15px 0;
 }
 
 .tip-box {
-    background: #f6f7f9;
-    border-radius: 16px;
-    padding: 20px 22px;
-    line-height: 1.7;
-    margin-bottom: 20px;
+    background: #f5f6f8;
+    border-radius: 14px;
+    padding: 15px 16px;
+    line-height: 1.55;
+    margin: 8px 0 15px 0;
+}
+
+
+/* =====================================================
+   스마트폰 최적화
+   ===================================================== */
+
+@media (max-width: 600px) {
+
+    .block-container {
+        padding-top: 0.7rem;
+        padding-left: 0.85rem;
+        padding-right: 0.85rem;
+        padding-bottom: 1.2rem;
+    }
+
+    .main-title {
+        font-size: 1.7rem;
+        margin-bottom: 0.15rem;
+    }
+
+    .sub-title {
+        font-size: 0.86rem;
+        line-height: 1.38;
+        margin-bottom: 0.9rem;
+    }
+
+    .step-label {
+        font-size: 0.68rem;
+    }
+
+    .step-title {
+        font-size: 1.28rem;
+        margin-bottom: 0.55rem;
+    }
+
+    .guide-box {
+        padding: 11px 13px;
+        border-radius: 11px;
+        margin-bottom: 9px;
+        font-size: 0.85rem;
+        line-height: 1.42;
+    }
+
+    .result-good,
+    .result-mid,
+    .result-bad,
+    .result-info {
+        padding: 17px;
+        margin-top: 9px;
+        border-radius: 13px;
+    }
+
+    .result-title {
+        font-size: 1.2rem;
+    }
+
+    .result-value {
+        font-size: 2.2rem;
+    }
+
+    .result-description {
+        font-size: 0.88rem;
+    }
+
+    .compare-card {
+        min-height: 88px;
+        padding: 12px 5px;
+    }
+
+    .compare-value {
+        font-size: 1.45rem;
+    }
+
+    .reason-box,
+    .tip-box {
+        padding: 13px;
+        font-size: 0.88rem;
+    }
+
+    h3 {
+        font-size: 1.08rem !important;
+        margin-top: 1rem !important;
+        margin-bottom: 0.45rem !important;
+    }
+
+    div[data-testid="stHorizontalBlock"] {
+        gap: 0.45rem;
+    }
+
+    button {
+        min-height: 40px !important;
+    }
+
+    div[data-testid="stAudio"] {
+        margin-top: 0 !important;
+        margin-bottom: 0.5rem !important;
+    }
+
 }
 
 </style>
@@ -194,7 +322,7 @@ st.markdown(
 
 
 # =========================================================
-# SESSION STATE
+# SESSION
 # =========================================================
 
 defaults = {
@@ -239,8 +367,8 @@ RESONANCES = {
         "icon": "🦷",
         "description": "소리가 앞쪽으로 또렷하게 모이는 울림",
         "guide": (
-            "소리를 억지로 밀어내지 말고 "
-            "윗니와 입 앞쪽으로 울림이 모이는 느낌을 찾아보세요."
+            "소리를 밀어내지 말고 "
+            "윗니와 입 앞쪽에 울림이 모이는 느낌을 찾아보세요."
         ),
     },
 
@@ -265,7 +393,7 @@ RESONANCES = {
 
 
 # =========================================================
-# CUSTOM 5 SECOND RECORDER
+# CUSTOM 5-SECOND RECORDER
 # =========================================================
 
 RECORDER_HTML = """
@@ -288,7 +416,7 @@ RECORDER_HTML = """
     </div>
 
     <div id="helpText" class="help">
-        버튼을 누르면 5초 동안 자동으로 녹음됩니다.
+        누르면 5초간 자동 녹음됩니다.
     </div>
 
 </div>
@@ -297,25 +425,29 @@ RECORDER_HTML = """
 
 RECORDER_CSS = """
 
-.recorder {
-
+:host {
+    display: block;
     width: 100%;
     height: 100%;
+    overflow: hidden;
+}
 
-    min-height: 285px;
+.recorder {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
 
-    border: 1px solid #e2e5e9;
-    border-radius: 22px;
+    border: 1px solid #e1e4e8;
+    border-radius: 17px;
 
     display: flex;
     flex-direction: column;
-
     align-items: center;
     justify-content: center;
 
-    padding: 28px 22px;
+    padding: 12px 10px;
 
-    box-sizing: border-box;
+    overflow: hidden;
 
     background: var(--st-background-color);
 
@@ -324,105 +456,83 @@ RECORDER_CSS = """
 
 
 .record-button {
-
-    width: 108px;
-    height: 108px;
+    width: 78px;
+    height: 78px;
+    flex: 0 0 78px;
 
     border: none;
     border-radius: 50%;
 
-    background: white;
-
-    cursor: pointer;
+    background: #ffffff;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
+    cursor: pointer;
+
     box-shadow:
-        0 5px 18px rgba(0,0,0,0.13),
-        inset 0 0 0 1px rgba(0,0,0,0.07);
+        0 4px 14px rgba(0,0,0,0.13),
+        inset 0 0 0 1px rgba(0,0,0,0.06);
 
     transition:
-        transform .18s ease,
-        box-shadow .18s ease,
-        background .18s ease;
-}
-
-
-.record-button:hover {
-
-    transform: scale(1.045);
-
-    box-shadow:
-        0 8px 24px rgba(0,0,0,0.17),
-        inset 0 0 0 1px rgba(0,0,0,0.07);
+        transform .15s ease,
+        background .15s ease;
 }
 
 
 .record-button:active {
-    transform: scale(.97);
+    transform: scale(.95);
 }
 
 
 .mic-icon {
-    font-size: 45px;
+    font-size: 34px;
+    line-height: 1;
 }
 
 
 .record-button.recording {
-
     background: #e53935;
-
     animation: pulse 1.05s infinite;
 }
 
 
 .record-button.recording .mic-icon {
-
     font-size: 0;
 }
 
 
 .record-button.recording .mic-icon::after {
-
     content: "■";
-
-    font-size: 34px;
-
+    font-size: 25px;
     color: white;
 }
 
 
 .record-button.done {
-
     background: #e8f6ed;
 }
 
 
 .record-button.done .mic-icon {
-
     font-size: 0;
 }
 
 
 .record-button.done .mic-icon::after {
-
     content: "✓";
-
-    color: #269451;
-
-    font-size: 48px;
-
+    font-size: 36px;
     font-weight: 800;
+    color: #269451;
 }
 
 
 .status {
+    margin-top: 8px;
 
-    margin-top: 21px;
-
-    font-size: 17px;
+    font-size: 14px;
+    line-height: 1.15;
 
     font-weight: 750;
 
@@ -441,10 +551,10 @@ RECORDER_CSS = """
 
 
 .timer {
+    margin-top: 3px;
 
-    margin-top: 7px;
-
-    font-size: 34px;
+    font-size: 25px;
+    line-height: 1.1;
 
     font-weight: 850;
 
@@ -455,12 +565,10 @@ RECORDER_CSS = """
 
 
 .progress-wrap {
+    width: min(300px, 80%);
+    height: 5px;
 
-    width: min(360px, 90%);
-
-    height: 7px;
-
-    margin-top: 17px;
+    margin-top: 8px;
 
     background: #eceff2;
 
@@ -471,9 +579,7 @@ RECORDER_CSS = """
 
 
 .progress {
-
     width: 0%;
-
     height: 100%;
 
     background: #e53935;
@@ -483,10 +589,10 @@ RECORDER_CSS = """
 
 
 .help {
+    margin-top: 6px;
 
-    margin-top: 15px;
-
-    font-size: 13px;
+    font-size: 10.5px;
+    line-height: 1.15;
 
     color: #7a7f87;
 
@@ -497,17 +603,18 @@ RECORDER_CSS = """
 @keyframes pulse {
 
     0% {
-        box-shadow: 0 0 0 0 rgba(229,57,53,.32);
+        box-shadow: 0 0 0 0 rgba(229,57,53,.28);
     }
 
     70% {
-        box-shadow: 0 0 0 18px rgba(229,57,53,0);
+        box-shadow: 0 0 0 12px rgba(229,57,53,0);
     }
 
     100% {
         box-shadow: 0 0 0 0 rgba(229,57,53,0);
     }
 }
+
 """
 
 
@@ -543,13 +650,9 @@ export default function(component) {
     let recording = false;
 
     let stream = null;
-
     let audioContext = null;
-
     let source = null;
-
     let processor = null;
-
     let silentGain = null;
 
     let buffers = [];
@@ -559,14 +662,15 @@ export default function(component) {
     let startTime = 0;
 
     let timerFrame = null;
-
     let stopTimer = null;
 
 
     function formatTime(ms) {
 
         const sec =
-            Math.min(ms, RECORD_MS) / 1000;
+            Math.min(ms, RECORD_MS)
+            /
+            1000;
 
         return "00:" +
             sec.toFixed(1).padStart(4, "0");
@@ -603,18 +707,18 @@ export default function(component) {
     function writeString(
         view,
         offset,
-        string
+        text
     ) {
 
         for (
             let i = 0;
-            i < string.length;
+            i < text.length;
             i++
         ) {
 
             view.setUint8(
                 offset + i,
-                string.charCodeAt(i)
+                text.charCodeAt(i)
             );
         }
     }
@@ -641,11 +745,13 @@ export default function(component) {
             "RIFF"
         );
 
+
         view.setUint32(
             4,
             36 + samples.length * 2,
             true
         );
+
 
         writeString(
             view,
@@ -653,17 +759,20 @@ export default function(component) {
             "WAVE"
         );
 
+
         writeString(
             view,
             12,
             "fmt "
         );
 
+
         view.setUint32(
             16,
             16,
             true
         );
+
 
         view.setUint16(
             20,
@@ -671,11 +780,13 @@ export default function(component) {
             true
         );
 
+
         view.setUint16(
             22,
             1,
             true
         );
+
 
         view.setUint32(
             24,
@@ -683,11 +794,13 @@ export default function(component) {
             true
         );
 
+
         view.setUint32(
             28,
             sr * 2,
             true
         );
+
 
         view.setUint16(
             32,
@@ -695,17 +808,20 @@ export default function(component) {
             true
         );
 
+
         view.setUint16(
             34,
             16,
             true
         );
 
+
         writeString(
             view,
             36,
             "data"
         );
+
 
         view.setUint32(
             40,
@@ -723,7 +839,7 @@ export default function(component) {
             i++
         ) {
 
-            let s =
+            let sample =
                 Math.max(
                     -1,
                     Math.min(
@@ -733,15 +849,17 @@ export default function(component) {
                 );
 
 
-            s =
-                s < 0
-                ? s * 0x8000
-                : s * 0x7FFF;
+            sample =
+                sample < 0
+                ?
+                sample * 0x8000
+                :
+                sample * 0x7FFF;
 
 
             view.setInt16(
                 offset,
-                s,
+                sample,
                 true
             );
 
@@ -797,7 +915,7 @@ export default function(component) {
     }
 
 
-    function drawTimer() {
+    function updateTimer() {
 
         if (!recording) {
             return;
@@ -837,7 +955,7 @@ export default function(component) {
 
         timerFrame =
             requestAnimationFrame(
-                drawTimer
+                updateTimer
             );
     }
 
@@ -845,29 +963,23 @@ export default function(component) {
     async function cleanup() {
 
         try {
-
             if (processor) {
                 processor.disconnect();
             }
-
         } catch {}
 
 
         try {
-
             if (source) {
                 source.disconnect();
             }
-
         } catch {}
 
 
         try {
-
             if (silentGain) {
                 silentGain.disconnect();
             }
-
         } catch {}
 
 
@@ -887,21 +999,15 @@ export default function(component) {
         if (audioContext) {
 
             try {
-
                 await audioContext.close();
-
             } catch {}
         }
 
 
         processor = null;
-
         source = null;
-
         silentGain = null;
-
         stream = null;
-
         audioContext = null;
     }
 
@@ -945,7 +1051,7 @@ export default function(component) {
 
 
         statusText.textContent =
-            "녹음 저장 중...";
+            "저장 중...";
 
 
         helpText.textContent =
@@ -989,7 +1095,7 @@ export default function(component) {
 
 
         helpText.textContent =
-            "5초 녹음이 자동으로 저장되었습니다.";
+            "5초 녹음이 저장되었습니다.";
 
 
         setStateValue(
@@ -1068,8 +1174,7 @@ export default function(component) {
 
 
                     const input =
-                        event
-                        .inputBuffer
+                        event.inputBuffer
                         .getChannelData(0);
 
 
@@ -1124,7 +1229,7 @@ export default function(component) {
 
 
             helpText.textContent =
-                "5초가 지나면 자동으로 종료됩니다.";
+                "5초 후 자동으로 종료됩니다.";
 
 
             timerText.textContent =
@@ -1139,7 +1244,7 @@ export default function(component) {
                 performance.now();
 
 
-            drawTimer();
+            updateTimer();
 
 
             stopTimer =
@@ -1157,11 +1262,11 @@ export default function(component) {
 
 
             statusText.textContent =
-                "마이크를 사용할 수 없습니다";
+                "마이크 사용 불가";
 
 
             helpText.textContent =
-                "브라우저에서 마이크 사용 권한을 허용해주세요.";
+                "브라우저의 마이크 권한을 허용해주세요.";
         }
     }
 
@@ -1213,7 +1318,7 @@ export default function(component) {
 
 recorder_component = (
     st.components.v2.component(
-        "resonance_five_second_recorder",
+        "resonance_mobile_recorder",
         html=RECORDER_HTML,
         css=RECORDER_CSS,
         js=RECORDER_JS,
@@ -1234,7 +1339,7 @@ def five_second_recorder(key):
 
         width="stretch",
 
-        height=295,
+        height=205,
     )
 
 
@@ -1261,12 +1366,10 @@ def five_second_recorder(key):
 
 
 # =========================================================
-# AUDIO FUNCTIONS
+# AUDIO UTILS
 # =========================================================
 
-def audio_duration(
-    audio_bytes
-):
+def audio_duration(audio_bytes):
 
     data, sr = sf.read(
         io.BytesIO(
@@ -1275,9 +1378,7 @@ def audio_duration(
     )
 
     return float(
-        len(data)
-        /
-        sr
+        len(data) / sr
     )
 
 
@@ -1367,12 +1468,10 @@ def band_ratio(
 
 
 # =========================================================
-# ANALYZE AUDIO
+# AUDIO ANALYSIS
 # =========================================================
 
-def analyze_audio(
-    audio_bytes
-):
+def analyze_audio(audio_bytes):
 
     with tempfile.NamedTemporaryFile(
         suffix=".wav",
@@ -1395,11 +1494,9 @@ def analyze_audio(
         )
 
 
-        y, _ = (
-            librosa.effects.trim(
-                y,
-                top_db=35
-            )
+        y, _ = librosa.effects.trim(
+            y,
+            top_db=35
         )
 
 
@@ -1417,16 +1514,14 @@ def analyze_audio(
             )
 
 
-        y = (
-            librosa.util.normalize(
-                y
-            )
+        y = librosa.util.normalize(
+            y
         )
 
 
-        # -----------------------------------------------
+        # -------------------------------------------------
         # F0
-        # -----------------------------------------------
+        # -------------------------------------------------
 
         sound = parselmouth.Sound(
             tmp.name
@@ -1456,9 +1551,9 @@ def analyze_audio(
         )
 
 
-        # -----------------------------------------------
+        # -------------------------------------------------
         # SPECTRUM
-        # -----------------------------------------------
+        # -------------------------------------------------
 
         spectrum = np.abs(
             librosa.stft(
@@ -1476,11 +1571,9 @@ def analyze_audio(
         )
 
 
-        mean_power = (
-            np.mean(
-                power,
-                axis=1
-            )
+        mean_power = np.mean(
+            power,
+            axis=1
         )
 
 
@@ -1548,14 +1641,13 @@ def analyze_audio(
 
 
 # =========================================================
-# CHEST JUDGEMENT
+# CHEST MODEL
 # =========================================================
 
 def judge_chest(
     baseline,
     target
 ):
-
 
     low_gain = percent_change(
         baseline["band_80_500"],
@@ -1602,15 +1694,10 @@ def judge_chest(
     )
 
 
-    # 1차 연구용 지수
     score = (
-        low_gain
-        *
-        0.8
+        low_gain * 0.8
         +
-        centroid_change
-        *
-        0.2
+        centroid_change * 0.2
     )
 
 
@@ -1630,7 +1717,6 @@ def judge_chest(
     ):
 
         status = "retry"
-
         css = "result-mid"
 
         title = "다시 측정해 주세요"
@@ -1644,7 +1730,6 @@ def judge_chest(
     elif score >= 10:
 
         status = "good"
-
         css = "result-good"
 
         title = "잘 되고 있습니다"
@@ -1658,7 +1743,6 @@ def judge_chest(
     elif score >= 3:
 
         status = "mid"
-
         css = "result-mid"
 
         title = "방향은 맞습니다"
@@ -1672,7 +1756,6 @@ def judge_chest(
     elif score > -3:
 
         status = "neutral"
-
         css = "result-mid"
 
         title = "뚜렷한 변화가 없습니다"
@@ -1686,7 +1769,6 @@ def judge_chest(
     else:
 
         status = "bad"
-
         css = "result-bad"
 
         title = "가슴 공명이 감소했습니다"
@@ -1740,19 +1822,15 @@ if st.session_state.page == "select":
 
 else:
 
-    focus = (
-        st.session_state.focus
-    )
-
+    focus = st.session_state.focus
 
     title = (
         f"{RESONANCES[focus]['icon']} "
         f"{focus} 공명 훈련"
     )
 
-
     subtitle = (
-        f"나의 평소 발성과 비교하여 "
+        f"기준 발성과 비교하여 "
         f"{focus} 공명의 변화를 확인합니다."
     )
 
@@ -1807,25 +1885,16 @@ if st.session_state.page == "select":
     )
 
 
-    info = (
-        RESONANCES[
-            focus
-        ]
-    )
+    info = RESONANCES[
+        focus
+    ]
 
 
     st.markdown(
         f"""
 <div class="guide-box">
-
-<b>
-{info['icon']} {focus} 공명
-</b>
-
-<br><br>
-
+<b>{info['icon']} {focus} 공명</b><br>
 {info['description']}
-
 </div>
 """,
         unsafe_allow_html=True,
@@ -1842,11 +1911,9 @@ if st.session_state.page == "select":
             focus
         )
 
-
         st.session_state.page = (
             "baseline_record"
         )
-
 
         st.rerun()
 
@@ -1872,21 +1939,9 @@ elif st.session_state.page == "baseline_record":
     st.markdown(
         """
 <div class="guide-box">
-
-<b>
-평소처럼 편안하게 /아/를 발성하세요.
-</b>
-
-<br><br>
-
-특정 공명을 만들려고 하지 말고
-가장 자연스러운 목소리를 사용합니다.
-
-<br><br>
-
-버튼을 누르면
-<b>5초 후 자동으로 녹음이 끝납니다.</b>
-
+<b>편안하게 /아/를 발성하세요.</b><br>
+특정 공명을 의도하지 말고 자연스럽게 발성합니다.
+버튼을 누르면 <b>5초간 자동 녹음</b>됩니다.
 </div>
 """,
         unsafe_allow_html=True,
@@ -1910,11 +1965,9 @@ elif st.session_state.page == "baseline_record":
             audio
         )
 
-
         st.session_state.page = (
             "baseline_review"
         )
-
 
         st.rerun()
 
@@ -1926,7 +1979,6 @@ elif st.session_state.page == "baseline_record":
         st.session_state.page = (
             "select"
         )
-
 
         st.rerun()
 
@@ -1957,23 +2009,11 @@ elif st.session_state.page == "baseline_review":
     st.markdown(
         f"""
 <div class="complete-box">
-
-<div class="complete-title">
-✅ 녹음 완료
-</div>
-
-<div class="complete-time">
-녹음 시간 · {duration:.1f}초
-</div>
-
+<div class="complete-title">✅ 녹음 완료</div>
+<div class="complete-time">녹음 시간 · {duration:.1f}초</div>
 </div>
 """,
         unsafe_allow_html=True,
-    )
-
-
-    st.markdown(
-        "#### ▶ 녹음 들어보기"
     )
 
 
@@ -1983,9 +2023,7 @@ elif st.session_state.page == "baseline_review":
     )
 
 
-    col1, col2 = (
-        st.columns(2)
-    )
+    col1, col2 = st.columns(2)
 
 
     with col1:
@@ -1999,16 +2037,13 @@ elif st.session_state.page == "baseline_review":
                 None
             )
 
-
             st.session_state.baseline_recorder_id += (
                 1
             )
 
-
             st.session_state.page = (
                 "baseline_record"
             )
-
 
             st.rerun()
 
@@ -2025,7 +2060,6 @@ elif st.session_state.page == "baseline_review":
                 "target_record"
             )
 
-
             st.rerun()
 
 
@@ -2035,16 +2069,11 @@ elif st.session_state.page == "baseline_review":
 
 elif st.session_state.page == "target_record":
 
-    focus = (
-        st.session_state.focus
-    )
+    focus = st.session_state.focus
 
-
-    info = (
-        RESONANCES[
-            focus
-        ]
-    )
+    info = RESONANCES[
+        focus
+    ]
 
 
     st.markdown(
@@ -2054,7 +2083,7 @@ elif st.session_state.page == "target_record":
 
 
     st.markdown(
-        f'<div class="step-title">{focus} 공명 발성 녹음</div>',
+        f'<div class="step-title">{focus} 공명 발성</div>',
         unsafe_allow_html=True,
     )
 
@@ -2062,24 +2091,9 @@ elif st.session_state.page == "target_record":
     st.markdown(
         f"""
 <div class="guide-box">
-
-<b>
-이번에는 {focus} 공명을 의도해 /아/를 발성하세요.
-</b>
-
-<br><br>
-
-기준 발성과 가능한 한
-<b>같은 음높이와 비슷한 크기</b>를 유지합니다.
-
-<br><br>
-
+<b>{focus} 공명을 의도해 /아/를 발성하세요.</b><br>
+기준 발성과 같은 음높이를 유지하세요.
 {info['guide']}
-
-<br><br>
-
-녹음은 <b>5초 후 자동으로 종료</b>됩니다.
-
 </div>
 """,
         unsafe_allow_html=True,
@@ -2103,11 +2117,9 @@ elif st.session_state.page == "target_record":
             audio
         )
 
-
         st.session_state.page = (
             "target_review"
         )
-
 
         st.rerun()
 
@@ -2118,10 +2130,7 @@ elif st.session_state.page == "target_record":
 
 elif st.session_state.page == "target_review":
 
-    focus = (
-        st.session_state.focus
-    )
-
+    focus = st.session_state.focus
 
     duration = audio_duration(
         st.session_state.target_audio
@@ -2143,23 +2152,11 @@ elif st.session_state.page == "target_review":
     st.markdown(
         f"""
 <div class="complete-box">
-
-<div class="complete-title">
-✅ 녹음 완료
-</div>
-
-<div class="complete-time">
-녹음 시간 · {duration:.1f}초
-</div>
-
+<div class="complete-title">✅ 녹음 완료</div>
+<div class="complete-time">녹음 시간 · {duration:.1f}초</div>
 </div>
 """,
         unsafe_allow_html=True,
-    )
-
-
-    st.markdown(
-        "#### ▶ 녹음 들어보기"
     )
 
 
@@ -2169,9 +2166,7 @@ elif st.session_state.page == "target_review":
     )
 
 
-    col1, col2 = (
-        st.columns(2)
-    )
+    col1, col2 = st.columns(2)
 
 
     with col1:
@@ -2185,16 +2180,13 @@ elif st.session_state.page == "target_review":
                 None
             )
 
-
             st.session_state.target_recorder_id += (
                 1
             )
 
-
             st.session_state.page = (
                 "target_record"
             )
-
 
             st.rerun()
 
@@ -2211,7 +2203,6 @@ elif st.session_state.page == "target_review":
                 "result"
             )
 
-
             st.rerun()
 
 
@@ -2221,9 +2212,7 @@ elif st.session_state.page == "target_review":
 
 elif st.session_state.page == "result":
 
-    focus = (
-        st.session_state.focus
-    )
+    focus = st.session_state.focus
 
 
     st.markdown(
@@ -2248,14 +2237,13 @@ elif st.session_state.page == "result":
                 st.session_state.baseline_audio
             )
 
-
             target = analyze_audio(
                 st.session_state.target_audio
             )
 
 
         # =================================================
-        # 가슴 공명 판정
+        # 가슴
         # =================================================
 
         if focus == "가슴":
@@ -2266,27 +2254,20 @@ elif st.session_state.page == "result":
             )
 
 
-            score = (
-                result["score"]
+            score = result[
+                "score"
+            ]
+
+
+            score_text = (
+                f"+{score:.1f}%"
+                if score >= 0
+                else
+                f"{score:.1f}%"
             )
 
 
-            if score >= 0:
-
-                score_text = (
-                    f"+{score:.1f}%"
-                )
-
-            else:
-
-                score_text = (
-                    f"{score:.1f}%"
-                )
-
-
-            # ---------------------------------------------
             # 1. 판정
-            # ---------------------------------------------
 
             st.markdown(
                 f"""
@@ -2310,9 +2291,7 @@ elif st.session_state.page == "result":
             )
 
 
-            # ---------------------------------------------
-            # 2. 기준 / 현재 직관적 비교
-            # ---------------------------------------------
+            # 2. 기준 / 현재
 
             st.markdown(
                 "### 가슴 공명 관련 울림"
@@ -2405,9 +2384,7 @@ elif st.session_state.page == "result":
                 )
 
 
-            # ---------------------------------------------
             # 3. 판단 근거
-            # ---------------------------------------------
 
             st.markdown(
                 "### 왜 이렇게 판단했나요?"
@@ -2441,54 +2418,62 @@ elif st.session_state.page == "result":
             else:
 
                 st.write(
-                    "➖ 가슴 관련 저역 에너지의 "
-                    "변화가 크지 않습니다."
+                    "➖ 가슴 관련 저역 에너지 변화가 크지 않습니다."
                 )
 
 
-            if result["centroid_change"] > 3:
+            if result[
+                "centroid_change"
+            ] > 3:
 
                 st.write(
-                    "✅ 전체 소리의 에너지 중심도 "
-                    "낮은 쪽으로 이동했습니다."
+                    "✅ 전체 소리의 에너지 중심도 낮은 쪽으로 이동했습니다."
                 )
 
 
-            elif result["centroid_change"] < -3:
+            elif result[
+                "centroid_change"
+            ] < -3:
 
                 st.write(
-                    "➖ 전체 소리의 에너지 중심은 "
-                    "오히려 높은 쪽으로 이동했습니다."
+                    "➖ 전체 소리의 에너지 중심은 높은 쪽으로 이동했습니다."
                 )
 
 
             else:
 
                 st.write(
-                    "➖ 전체적인 음색 중심 변화는 "
-                    "크지 않습니다."
+                    "➖ 전체적인 음색 중심 변화는 크지 않습니다."
                 )
 
 
             if np.isfinite(
-                result["f0_change"]
+                result[
+                    "f0_change"
+                ]
             ):
 
-                if result["f0_change"] <= 8:
+                if (
+                    result["f0_change"]
+                    <=
+                    8
+                ):
 
                     st.write(
                         "✅ 두 발성의 음높이 차이가 "
-                        f"**{result['f0_change']:.1f}%**로 "
-                        "비교적 안정적입니다."
+                        f"**{result['f0_change']:.1f}%**로 안정적입니다."
                     )
 
 
-                elif result["f0_change"] <= 15:
+                elif (
+                    result["f0_change"]
+                    <=
+                    15
+                ):
 
                     st.write(
                         "⚠️ 두 발성의 음높이가 "
-                        f"**{result['f0_change']:.1f}%** "
-                        "차이납니다."
+                        f"**{result['f0_change']:.1f}%** 차이납니다."
                     )
 
 
@@ -2507,34 +2492,36 @@ elif st.session_state.page == "result":
             )
 
 
-            # ---------------------------------------------
             # 4. 다음 발성
-            # ---------------------------------------------
 
             st.markdown(
                 "### 다음 발성에서 해볼 것"
             )
 
 
-            if result["status"] == "good":
+            if result[
+                "status"
+            ] == "good":
 
                 tip = (
                     "지금 만든 울림의 느낌을 기억하세요. "
-                    "음높이를 그대로 유지하면서 "
-                    "같은 울림을 다시 재현해 보세요."
+                    "음높이를 유지하면서 같은 울림을 다시 재현해 보세요."
                 )
 
 
-            elif result["status"] == "mid":
+            elif result[
+                "status"
+            ] == "mid":
 
                 tip = (
                     "방향은 맞습니다. "
-                    "음을 낮추지 말고 "
-                    "가슴 쪽의 울림을 조금 더 풍부하게 만들어 보세요."
+                    "음을 낮추지 말고 가슴 쪽 울림을 조금 더 풍부하게 만들어 보세요."
                 )
 
 
-            elif result["status"] == "retry":
+            elif result[
+                "status"
+            ] == "retry":
 
                 tip = (
                     "공명보다 음높이가 많이 달라졌습니다. "
@@ -2542,21 +2529,21 @@ elif st.session_state.page == "result":
                 )
 
 
-            elif result["status"] == "neutral":
+            elif result[
+                "status"
+            ] == "neutral":
 
                 tip = (
-                    "기준 발성과 음높이는 유지하면서 "
-                    "가슴 쪽에서 느껴지는 진동을 "
-                    "조금 더 확장해 보세요."
+                    "기준 발성과 같은 높이를 유지하면서 "
+                    "가슴 쪽에서 느껴지는 진동을 조금 더 확장해 보세요."
                 )
 
 
             else:
 
                 tip = (
-                    "음을 낮추는 것으로 가슴 공명을 만들려고 하지 말고, "
-                    "기준 발성의 높이를 유지한 상태에서 "
-                    "가슴 쪽 울림을 다시 찾아보세요."
+                    "음을 낮추려고 하지 말고 "
+                    "기준 발성의 높이를 유지한 채 가슴 울림을 다시 찾아보세요."
                 )
 
 
@@ -2570,9 +2557,7 @@ elif st.session_state.page == "result":
             )
 
 
-            # ---------------------------------------------
-            # 5. 연구자용 상세
-            # ---------------------------------------------
+            # 5. 연구자
 
             with st.expander(
                 "연구자용 상세 데이터"
@@ -2597,13 +2582,13 @@ elif st.session_state.page == "result":
 
 
                 st.write(
-                    f"기준 80–500 Hz 비율 : "
+                    f"기준 80–500 Hz : "
                     f"{baseline['band_80_500']:.2f}%"
                 )
 
 
                 st.write(
-                    f"훈련 80–500 Hz 비율 : "
+                    f"훈련 80–500 Hz : "
                     f"{target['band_80_500']:.2f}%"
                 )
 
@@ -2638,19 +2623,8 @@ elif st.session_state.page == "result":
                 )
 
 
-                st.markdown("---")
-
-
-                st.caption(
-                    "현재 가슴 공명 변화 지수는 "
-                    "80–500 Hz 상대 에너지 변화와 "
-                    "Spectral Centroid 변화를 결합한 "
-                    "1차 연구용 판정 모델입니다."
-                )
-
-
         # =================================================
-        # 아직 판정모델이 없는 공명
+        # 나머지 공명
         # =================================================
 
         else:
@@ -2660,20 +2634,12 @@ elif st.session_state.page == "result":
 <div class="result-info">
 
 <div class="result-title">
-{focus} 공명 분석 데이터가 기록되었습니다
+{focus} 공명 데이터 기록 완료
 </div>
 
 <div class="result-description">
-
-현재 {focus} 공명은
-판정 기준을 구축하는 단계입니다.
-
-<br><br>
-
-충분한 근거가 확보되기 전까지는
-잘되고 있다 / 안되고 있다를
-임의로 판정하지 않습니다.
-
+현재 {focus} 공명은 판정 기준을 구축하는 단계입니다.
+충분한 근거가 확보되기 전에는 성공 여부를 임의로 판정하지 않습니다.
 </div>
 
 </div>
@@ -2690,22 +2656,22 @@ elif st.session_state.page == "result":
             bands = [
 
                 (
-                    "저역 80–500 Hz",
+                    "80–500 Hz",
                     "band_80_500"
                 ),
 
                 (
-                    "중저역 500–1500 Hz",
+                    "500–1500 Hz",
                     "band_500_1500"
                 ),
 
                 (
-                    "중고역 1500–3000 Hz",
+                    "1500–3000 Hz",
                     "band_1500_3000"
                 ),
 
                 (
-                    "고역 3000–5000 Hz",
+                    "3000–5000 Hz",
                     "band_3000_5000"
                 ),
             ]
@@ -2723,24 +2689,6 @@ elif st.session_state.page == "result":
                 st.write(
                     f"**{label}** : "
                     f"{change:+.1f}%p"
-                )
-
-
-            f0_change = abs(
-                percent_change(
-                    baseline["f0"],
-                    target["f0"]
-                )
-            )
-
-
-            if np.isfinite(
-                f0_change
-            ):
-
-                st.write(
-                    f"**음높이 차이** : "
-                    f"{f0_change:.1f}%"
                 )
 
 
@@ -2763,9 +2711,9 @@ elif st.session_state.page == "result":
                 for label, key in bands:
 
                     st.write(
-                        f"{label} / 기준 : "
+                        f"{label} / 기준 "
                         f"{baseline[key]:.2f}% / "
-                        f"훈련 : "
+                        f"훈련 "
                         f"{target[key]:.2f}%"
                     )
 
@@ -2793,16 +2741,13 @@ elif st.session_state.page == "result":
                     None
                 )
 
-
                 st.session_state.target_recorder_id += (
                     1
                 )
 
-
                 st.session_state.page = (
                     "target_record"
                 )
-
 
                 st.rerun()
 
@@ -2819,26 +2764,21 @@ elif st.session_state.page == "result":
                     None
                 )
 
-
                 st.session_state.target_audio = (
                     None
                 )
-
 
                 st.session_state.baseline_recorder_id += (
                     1
                 )
 
-
                 st.session_state.target_recorder_id += (
                     1
                 )
 
-
                 st.session_state.page = (
                     "select"
                 )
-
 
                 st.rerun()
 
@@ -2858,15 +2798,12 @@ elif st.session_state.page == "result":
                 None
             )
 
-
             st.session_state.target_recorder_id += (
                 1
             )
 
-
             st.session_state.page = (
                 "target_record"
             )
-
 
             st.rerun()
