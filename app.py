@@ -6,14 +6,9 @@ import librosa
 import numpy as np
 import pandas as pd
 import parselmouth
-import soundfile as sf
 import streamlit as st
 from parselmouth.praat import call
 
-
-# =========================================================
-# PAGE
-# =========================================================
 
 st.set_page_config(
     page_title="공명 캘리브레이션",
@@ -22,14 +17,9 @@ st.set_page_config(
 )
 
 
-# =========================================================
-# STYLE
-# =========================================================
-
 st.markdown(
     """
 <style>
-
 .block-container {
     max-width: 720px;
     padding-top: 0.8rem;
@@ -165,16 +155,11 @@ st.markdown(
         margin-bottom: 0.4rem !important;
     }
 }
-
 </style>
 """,
     unsafe_allow_html=True,
 )
 
-
-# =========================================================
-# CONFIG
-# =========================================================
 
 RESONANCES = [
     "가슴",
@@ -183,6 +168,7 @@ RESONANCES = [
     "비강",
     "두개골",
 ]
+
 
 RESONANCE_INFO = {
     "가슴": {
@@ -207,12 +193,9 @@ RESONANCE_INFO = {
     },
 }
 
+
 REPEATS = 5
 
-
-# =========================================================
-# SESSION
-# =========================================================
 
 defaults = {
     "focus_index": 0,
@@ -223,14 +206,11 @@ defaults = {
     "page": "record",
 }
 
+
 for key, value in defaults.items():
     if key not in st.session_state:
         st.session_state[key] = value
 
-
-# =========================================================
-# RECORDER
-# =========================================================
 
 RECORDER_HTML = """
 <div class="recorder">
@@ -400,6 +380,7 @@ RECORDER_CSS = """
 }
 
 @keyframes pulse {
+
     0% {
         box-shadow: 0 0 0 0 rgba(229,57,53,.28);
     }
@@ -418,7 +399,10 @@ RECORDER_CSS = """
 RECORDER_JS = r"""
 export default function(component) {
 
-    const { parentElement, setStateValue } = component;
+    const {
+        parentElement,
+        setStateValue
+    } = component;
 
     const button =
         parentElement.querySelector("#recordButton");
@@ -940,8 +924,7 @@ export default function(component) {
                 audioContext.destination
             );
 
-            recording =
-                true;
+            recording = true;
 
             button.classList.remove(
                 "done"
@@ -1042,7 +1025,7 @@ export default function(component) {
 
 
 recorder_component = st.components.v2.component(
-    "calibration_recorder_v1",
+    "calibration_recorder_v2",
     html=RECORDER_HTML,
     css=RECORDER_CSS,
     js=RECORDER_JS,
@@ -1081,10 +1064,6 @@ def five_second_recorder(key):
         return None
 
 
-# =========================================================
-# AUDIO ANALYSIS
-# =========================================================
-
 def safe_float(value):
 
     try:
@@ -1095,6 +1074,7 @@ def safe_float(value):
             return value
 
     except Exception:
+
         pass
 
     return np.nan
@@ -1119,12 +1099,15 @@ def band_ratio(
         (frequencies < 5000)
     )
 
-    total =
+    total = (
         np.sum(
             power[
                 total_mask
             ]
-        ) + 1e-12
+        )
+        +
+        1e-12
+    )
 
     return float(
         np.sum(
@@ -1150,15 +1133,13 @@ def spectral_tilt(
         (frequencies <= 5000)
     )
 
-    freq =
-        frequencies[
-            mask
-        ]
+    freq = frequencies[
+        mask
+    ]
 
-    pwr =
-        power[
-            mask
-        ]
+    pwr = power[
+        mask
+    ]
 
     valid = (
         (freq > 0)
@@ -1166,35 +1147,34 @@ def spectral_tilt(
         (pwr > 0)
     )
 
-    freq =
-        freq[
-            valid
-        ]
+    freq = freq[
+        valid
+    ]
 
-    pwr =
-        pwr[
-            valid
-        ]
+    pwr = pwr[
+        valid
+    ]
 
     if len(freq) < 10:
         return np.nan
 
-    x =
-        np.log10(
-            freq
-        )
+    x = np.log10(
+        freq
+    )
 
-    y =
-        10 * np.log10(
+    y = (
+        10
+        *
+        np.log10(
             pwr + 1e-12
         )
+    )
 
-    slope =
-        np.polyfit(
-            x,
-            y,
-            1
-        )[0]
+    slope = np.polyfit(
+        x,
+        y,
+        1
+    )[0]
 
     return float(
         slope
@@ -1207,18 +1187,24 @@ def mean_formant(
     duration
 ):
 
-    times =
-        np.linspace(
-            max(
-                0.15,
-                duration * 0.15
-            ),
-            min(
-                duration - 0.15,
-                duration * 0.85
-            ),
-            20
-        )
+    start = max(
+        0.15,
+        duration * 0.15
+    )
+
+    end = min(
+        duration - 0.15,
+        duration * 0.85
+    )
+
+    if end <= start:
+        return np.nan
+
+    times = np.linspace(
+        start,
+        end,
+        20
+    )
 
     values = []
 
@@ -1232,13 +1218,12 @@ def mean_formant(
                 number,
                 float(t),
                 "Hertz",
-                "Linear"
+                "Linear",
             )
 
-            value =
-                safe_float(
-                    value
-                )
+            value = safe_float(
+                value
+            )
 
             if np.isfinite(
                 value
@@ -1277,24 +1262,30 @@ def analyze_audio(
 
         tmp.flush()
 
-        y, sr =
-            librosa.load(
-                tmp.name,
-                sr=None,
-                mono=True
-            )
+        y, sr = librosa.load(
+            tmp.name,
+            sr=None,
+            mono=True
+        )
 
-        raw_duration =
-            len(y) / sr
+        raw_duration = (
+            len(y)
+            /
+            sr
+        )
 
-        y_trim, _ =
+        y_trim, _ = (
             librosa.effects.trim(
                 y,
                 top_db=35
             )
+        )
 
-        duration =
-            len(y_trim) / sr
+        duration = (
+            len(y_trim)
+            /
+            sr
+        )
 
         if duration < 2:
 
@@ -1302,19 +1293,13 @@ def analyze_audio(
                 "유효한 발성 시간이 너무 짧습니다."
             )
 
-        y_norm =
-            librosa.util.normalize(
-                y_trim
-            )
+        y_norm = librosa.util.normalize(
+            y_trim
+        )
 
-        sound =
-            parselmouth.Sound(
-                tmp.name
-            )
-
-        # ----------------------------
-        # F0
-        # ----------------------------
+        sound = parselmouth.Sound(
+            tmp.name
+        )
 
         pitch = call(
             sound,
@@ -1324,137 +1309,115 @@ def analyze_audio(
             500.0
         )
 
-        f0 =
-            call(
-                pitch,
-                "Get mean",
-                0,
-                0,
-                "Hertz"
-            )
+        f0 = call(
+            pitch,
+            "Get mean",
+            0,
+            0,
+            "Hertz"
+        )
 
-        f0 =
-            safe_float(
-                f0
-            )
+        f0 = safe_float(
+            f0
+        )
 
-        # ----------------------------
-        # FORMANT
-        # ----------------------------
+        formant = call(
+            sound,
+            "To Formant (burg)",
+            0.0,
+            5,
+            5500,
+            0.025,
+            50
+        )
 
-        formant =
-            call(
-                sound,
-                "To Formant (burg)",
-                0.0,
-                5,
-                5500,
-                0.025,
-                50
-            )
-
-        sound_duration =
-            float(
-                call(
-                    sound,
-                    "Get total duration"
-                )
-            )
-
-        f1 =
-            mean_formant(
-                formant,
-                1,
-                sound_duration
-            )
-
-        f2 =
-            mean_formant(
-                formant,
-                2,
-                sound_duration
-            )
-
-        f3 =
-            mean_formant(
-                formant,
-                3,
-                sound_duration
-            )
-
-        # ----------------------------
-        # HNR
-        # ----------------------------
-
-        harmonicity =
+        sound_duration = float(
             call(
                 sound,
-                "To Harmonicity (cc)",
-                0.01,
-                75,
-                0.1,
-                1.0
+                "Get total duration"
             )
+        )
 
-        hnr =
-            call(
-                harmonicity,
-                "Get mean",
-                0,
-                0
+        f1 = mean_formant(
+            formant,
+            1,
+            sound_duration
+        )
+
+        f2 = mean_formant(
+            formant,
+            2,
+            sound_duration
+        )
+
+        f3 = mean_formant(
+            formant,
+            3,
+            sound_duration
+        )
+
+        harmonicity = call(
+            sound,
+            "To Harmonicity (cc)",
+            0.01,
+            75,
+            0.1,
+            1.0
+        )
+
+        hnr = call(
+            harmonicity,
+            "Get mean",
+            0,
+            0
+        )
+
+        hnr = safe_float(
+            hnr
+        )
+
+        spectrum = np.abs(
+            librosa.stft(
+                y_norm,
+                n_fft=2048,
+                hop_length=512
             )
+        )
 
-        hnr =
-            safe_float(
-                hnr
-            )
+        power = (
+            spectrum
+            **
+            2
+        )
 
-        # ----------------------------
-        # SPECTRUM
-        # ----------------------------
+        mean_power = np.mean(
+            power,
+            axis=1
+        )
 
-        spectrum =
-            np.abs(
-                librosa.stft(
-                    y_norm,
-                    n_fft=2048,
-                    hop_length=512
-                )
-            )
-
-        power =
-            spectrum ** 2
-
-        mean_power =
-            np.mean(
-                power,
-                axis=1
-            )
-
-        frequencies =
+        frequencies = (
             librosa.fft_frequencies(
                 sr=sr,
                 n_fft=2048
             )
+        )
 
-        centroid =
-            float(
-                np.mean(
-                    librosa.feature
-                    .spectral_centroid(
-                        y=y_norm,
-                        sr=sr
-                    )
+        centroid = float(
+            np.mean(
+                librosa.feature.spectral_centroid(
+                    y=y_norm,
+                    sr=sr
                 )
             )
+        )
 
-        tilt =
-            spectral_tilt(
-                mean_power,
-                frequencies
-            )
+        tilt = spectral_tilt(
+            mean_power,
+            frequencies
+        )
 
         return {
+
             "raw_duration_sec":
                 raw_duration,
 
@@ -1516,10 +1479,6 @@ def analyze_audio(
         }
 
 
-# =========================================================
-# UTILS
-# =========================================================
-
 def current_focus():
 
     return RESONANCES[
@@ -1546,6 +1505,7 @@ def total_target():
 def next_measurement():
 
     st.session_state.audio_bytes = None
+
     st.session_state.recorder_id += 1
 
     if (
@@ -1559,6 +1519,7 @@ def next_measurement():
     else:
 
         st.session_state.repeat_index = 0
+
         st.session_state.focus_index += 1
 
     if (
@@ -1567,26 +1528,31 @@ def next_measurement():
         len(RESONANCES)
     ):
 
-        st.session_state.page = "complete"
+        st.session_state.page = (
+            "complete"
+        )
 
     else:
 
-        st.session_state.page = "record"
+        st.session_state.page = (
+            "record"
+        )
 
 
 def reset_all():
 
     st.session_state.focus_index = 0
+
     st.session_state.repeat_index = 0
+
     st.session_state.records = []
+
     st.session_state.audio_bytes = None
+
     st.session_state.recorder_id += 1
+
     st.session_state.page = "record"
 
-
-# =========================================================
-# HEADER
-# =========================================================
 
 st.markdown(
     """
@@ -1596,6 +1562,7 @@ st.markdown(
 """,
     unsafe_allow_html=True,
 )
+
 
 st.markdown(
     """
@@ -1609,28 +1576,23 @@ st.markdown(
 )
 
 
-# =========================================================
-# RECORD
-# =========================================================
-
 if st.session_state.page == "record":
 
-    focus =
-        current_focus()
+    focus = current_focus()
 
-    info =
-        RESONANCE_INFO[
-            focus
-        ]
+    info = RESONANCE_INFO[
+        focus
+    ]
 
-    repeat_no =
-        st.session_state.repeat_index + 1
+    repeat_no = (
+        st.session_state.repeat_index
+        +
+        1
+    )
 
-    completed =
-        total_recorded()
+    completed = total_recorded()
 
-    total =
-        total_target()
+    total = total_target()
 
     st.progress(
         completed / total
@@ -1642,6 +1604,7 @@ if st.session_state.page == "record":
 <div class="progress-title">
 전체 진행
 </div>
+
 <div class="progress-value">
 {completed} / {total}
 </div>
@@ -1656,6 +1619,7 @@ if st.session_state.page == "record":
 <div class="progress-title">
 현재 측정
 </div>
+
 <div class="progress-value">
 {info['icon']} {focus} · {repeat_no} / {REPEATS}
 </div>
@@ -1668,43 +1632,45 @@ if st.session_state.page == "record":
         f"""
 <div class="guide-box">
 <b>/아/를 약 5초간 유지하세요.</b><br>
-{info['guide']}
-<br><br>
+{info['guide']}<br>
 가능하면 매번 비슷한 음높이와 비슷한 크기로 발성하세요.
 </div>
 """,
         unsafe_allow_html=True,
     )
 
-    audio =
-        five_second_recorder(
-            key=
-                "calibration_"
-                +
-                str(
-                    st.session_state.recorder_id
-                )
+    audio = five_second_recorder(
+        key=(
+            "calibration_"
+            +
+            str(
+                st.session_state.recorder_id
+            )
         )
+    )
 
     if audio:
 
-        st.session_state.audio_bytes = audio
-        st.session_state.page = "review"
+        st.session_state.audio_bytes = (
+            audio
+        )
+
+        st.session_state.page = (
+            "review"
+        )
 
         st.rerun()
 
 
-# =========================================================
-# REVIEW
-# =========================================================
-
 elif st.session_state.page == "review":
 
-    focus =
-        current_focus()
+    focus = current_focus()
 
-    repeat_no =
-        st.session_state.repeat_index + 1
+    repeat_no = (
+        st.session_state.repeat_index
+        +
+        1
+    )
 
     st.markdown(
         f"""
@@ -1712,6 +1678,7 @@ elif st.session_state.page == "review":
 <div class="progress-title">
 녹음 확인
 </div>
+
 <div class="progress-value">
 {focus} · {repeat_no} / {REPEATS}
 </div>
@@ -1725,8 +1692,9 @@ elif st.session_state.page == "review":
         format="audio/wav"
     )
 
-    col1, col2 =
-        st.columns(2)
+    col1, col2 = st.columns(
+        2
+    )
 
     with col1:
 
@@ -1735,11 +1703,17 @@ elif st.session_state.page == "review":
             use_container_width=True
         ):
 
-            st.session_state.audio_bytes = None
+            st.session_state.audio_bytes = (
+                None
+            )
 
-            st.session_state.recorder_id += 1
+            st.session_state.recorder_id += (
+                1
+            )
 
-            st.session_state.page = "record"
+            st.session_state.page = (
+                "record"
+            )
 
             st.rerun()
 
@@ -1757,10 +1731,9 @@ elif st.session_state.page == "review":
                     "음향 분석 중..."
                 ):
 
-                    features =
-                        analyze_audio(
-                            st.session_state.audio_bytes
-                        )
+                    features = analyze_audio(
+                        st.session_state.audio_bytes
+                    )
 
                 record = {
                     "resonance":
@@ -1776,8 +1749,9 @@ elif st.session_state.page == "review":
                     record
                 )
 
-                st.session_state.page =
+                st.session_state.page = (
                     "saved"
+                )
 
                 st.rerun()
 
@@ -1788,24 +1762,21 @@ elif st.session_state.page == "review":
                 )
 
 
-# =========================================================
-# SAVED
-# =========================================================
-
 elif st.session_state.page == "saved":
 
-    latest =
-        st.session_state.records[-1]
-
-    focus =
-        latest[
-            "resonance"
+    latest = (
+        st.session_state.records[
+            -1
         ]
+    )
 
-    repeat_no =
-        latest[
-            "repeat"
-        ]
+    focus = latest[
+        "resonance"
+    ]
+
+    repeat_no = latest[
+        "repeat"
+    ]
 
     st.markdown(
         f"""
@@ -1817,15 +1788,21 @@ elif st.session_state.page == "saved":
         unsafe_allow_html=True,
     )
 
-    col1, col2, col3 =
-        st.columns(3)
+    col1, col2, col3 = (
+        st.columns(
+            3
+        )
+    )
 
     with col1:
 
         st.markdown(
             f"""
 <div class="metric-mini">
-<div class="metric-label">F0</div>
+<div class="metric-label">
+F0
+</div>
+
 <div class="metric-value">
 {latest['f0_hz']:.0f}
 </div>
@@ -1839,7 +1816,10 @@ elif st.session_state.page == "saved":
         st.markdown(
             f"""
 <div class="metric-mini">
-<div class="metric-label">F1</div>
+<div class="metric-label">
+F1
+</div>
+
 <div class="metric-value">
 {latest['f1_hz']:.0f}
 </div>
@@ -1853,7 +1833,10 @@ elif st.session_state.page == "saved":
         st.markdown(
             f"""
 <div class="metric-mini">
-<div class="metric-label">F2</div>
+<div class="metric-label">
+F2
+</div>
+
 <div class="metric-value">
 {latest['f2_hz']:.0f}
 </div>
@@ -1873,31 +1856,32 @@ elif st.session_state.page == "saved":
         st.rerun()
 
 
-# =========================================================
-# COMPLETE
-# =========================================================
-
 elif st.session_state.page == "complete":
 
-    df =
-        pd.DataFrame(
-            st.session_state.records
-        )
+    df = pd.DataFrame(
+        st.session_state.records
+    )
 
     st.markdown(
         f"""
 <div class="done-box">
+
 <b style="font-size:1.2rem;">
 ✅ 캘리브레이션 완료
-</b><br><br>
+</b>
+
+<br><br>
 
 가슴 · 5회<br>
 입천장 · 5회<br>
 이빨·전방 · 5회<br>
 비강 · 5회<br>
-두개골 · 5회<br><br>
+두개골 · 5회
+
+<br><br>
 
 총 <b>{len(df)}개</b>의 음성 데이터가 수집되었습니다.
+
 </div>
 """,
         unsafe_allow_html=True,
@@ -1913,12 +1897,14 @@ elif st.session_state.page == "complete":
         hide_index=True
     )
 
-    csv_bytes =
+    csv_bytes = (
         df.to_csv(
             index=False
-        ).encode(
+        )
+        .encode(
             "utf-8-sig"
         )
+    )
 
     st.download_button(
         "📥 CSV 다운로드",
