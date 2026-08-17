@@ -4,6 +4,7 @@ import numpy as np
 import plotly.graph_objects as go
 import parselmouth
 from audio_recorder_streamlit import audio_recorder
+import time
 
 # 1. 페이지 기본 설정 및 디자인
 st.set_page_config(page_title="연기 발성 5대 공명 진단 시스템", page_icon="🎙️", layout="centered")
@@ -14,10 +15,11 @@ st.markdown("""
     .sub-title { font-size: 0.95rem; color: #666666; text-align: center; margin-bottom: 25px; }
     .guide-card { background-color: #F0F4F8; padding: 20px; border-radius: 12px; border-left: 6px solid #1F77B4; margin-bottom: 20px; }
     .step-header { font-size: 1.2rem; font-weight: 600; color: #0F4C81; margin-bottom: 10px; }
+    .timer-text { font-size: 1.5rem; font-weight: 700; color: #D9534F; text-align: center; margin: 15px 0; }
     </style>
 """, unsafe_allow_html=True)
 
-# 오타 수정된 세션 상태 초기화 (st.session_state)
+# 세션 상태 초기화
 if 'step' not in st.session_state:
     st.session_state.step = 1
 if 'gender' not in st.session_state:
@@ -52,36 +54,39 @@ if st.session_state.step == 1:
         st.rerun()
 
 # ==========================================
-# PAGE 2: 녹음 가이드, 실시간 녹음 및 들어보기
+# PAGE 2: 녹음 가이드, 5초 타임 녹음 및 들어보기
 # ==========================================
 elif st.session_state.step == 2:
-    st.markdown('<div class="step-header">STEP 2. 발성 녹음 진행</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-header">STEP 2. 발성 녹음 진행 (5초 자동 녹음)</div>', unsafe_allow_html=True)
     
     st.markdown("""
         <div class="guide-card">
             <b>📌 정확한 분석을 위한 3가지 수칙</b><br><br>
             1. <b>마이크 거리:</b> 스마트폰/마이크를 입에서 <b>주먹 하나 거리(약 15cm)</b> 띄우세요.<br>
             2. <b>발성 방법:</b> 가장 편안한 톤으로 <b>"에---"</b> 소리를 끊기지 않게 일정하게 내세요.<br>
-            3. <b>녹음 시간:</b> <b>4초 내외</b>로 호흡이 흔들리지 않게 유지해 주세요.
+            3. <b>녹음 시간:</b> 녹음 버튼을 누르고 <b>5초간</b> 소리를 일정하게 유지해 주세요.
         </div>
     """, unsafe_allow_html=True)
 
-    st.subheader("🎙️ 녹음하기")
-    st.caption("아래 마이크 버튼을 눌러 녹음을 시작하고, 종료 시 한 번 더 눌러주세요.")
+    st.subheader("🎙️ 5초 녹음 진행")
+    st.caption("아래 마이크 버튼을 클릭한 뒤 바로 '에---' 발성을 시작해 주세요.")
     
+    # 마이크 녹음 위젯
     recorded_audio = audio_recorder(
-        text="버튼을 눌러 녹음 시작/중지",
+        text="버튼을 누르면 녹음이 시작됩니다 (5초)",
         recording_color="#e8b62c",
         neutral_color="#1F77B4",
         icon_name="microphone",
         icon_size="3x",
     )
 
+    # 녹음 데이터 입력 시 수신
     if recorded_audio:
         st.session_state.audio_bytes = recorded_audio
 
+    # 녹음 완료 후 들어보기 및 다음 단계
     if st.session_state.audio_bytes is not None:
-        st.success("✅ 녹음이 완료되었습니다! 아래에서 미리 들어보실 수 있습니다.")
+        st.success("✅ 5초 녹음이 완성되었습니다! 아래에서 미리 들어보실 수 있습니다.")
         st.audio(st.session_state.audio_bytes, format="audio/wav")
         
         col1, col2 = st.columns(2)
