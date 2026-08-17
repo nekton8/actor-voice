@@ -1,5 +1,4 @@
 import base64
-import random
 import tempfile
 
 import librosa
@@ -11,7 +10,7 @@ from parselmouth.praat import call
 
 
 st.set_page_config(
-    page_title="남성 공명 블라인드 테스트 2",
+    page_title="남성 공명 훈련 베타",
     page_icon="🎙️",
     layout="centered",
 )
@@ -20,134 +19,142 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-
 .block-container {
     max-width: 720px;
     padding-top: 0.6rem;
     padding-bottom: 1.2rem;
 }
-
 .main-title {
-    font-size: 1.7rem;
+    font-size: 1.75rem;
     font-weight: 850;
     letter-spacing: -0.04em;
-    margin-bottom: 0.2rem;
+    line-height: 1.15;
+    margin-bottom: 0.15rem;
 }
-
 .sub-title {
     color: #666;
     font-size: 0.88rem;
     line-height: 1.45;
     margin-bottom: 0.7rem;
 }
-
+.beta {
+    display:inline-block;
+    font-size:0.72rem;
+    font-weight:800;
+    padding:3px 7px;
+    border-radius:999px;
+    background:#eef4ff;
+    color:#365f9d;
+    margin-bottom:8px;
+}
 .card {
-    border: 1px solid #e1e5e9;
-    border-radius: 14px;
-    padding: 12px 14px;
-    margin-bottom: 8px;
-    background: #fafbfc;
+    border:1px solid #e2e5e8;
+    border-radius:14px;
+    padding:13px 14px;
+    margin-bottom:8px;
+    background:#fafbfc;
 }
-
-.target {
-    font-size: 1.45rem;
-    font-weight: 850;
-    margin-top: 3px;
+.target-title {
+    font-size:1.45rem;
+    font-weight:850;
 }
-
 .guide {
-    background: #f5f6f8;
-    border-radius: 13px;
-    padding: 10px 12px;
-    font-size: 0.86rem;
-    line-height: 1.45;
-    margin-bottom: 8px;
+    background:#f5f6f8;
+    border-radius:13px;
+    padding:10px 12px;
+    font-size:0.86rem;
+    line-height:1.45;
+    margin-bottom:8px;
 }
-
-.result-ok {
-    background: #eaf7ef;
-    border: 1px solid #b8e1c6;
-    border-radius: 15px;
-    padding: 16px;
-    margin: 8px 0 12px;
+.result-good {
+    background:#eaf7ef;
+    border:1px solid #b8e1c6;
+    border-radius:15px;
+    padding:16px;
+    margin:8px 0 12px;
 }
-
-.result-no {
-    background: #fff0f0;
-    border: 1px solid #efc0c0;
-    border-radius: 15px;
-    padding: 16px;
-    margin: 8px 0 12px;
+.result-mid {
+    background:#fff8e8;
+    border:1px solid #ead7a7;
+    border-radius:15px;
+    padding:16px;
+    margin:8px 0 12px;
 }
-
-.result-title {
-    font-size: 1.2rem;
-    font-weight: 850;
+.result-bad {
+    background:#fff0f0;
+    border:1px solid #efc0c0;
+    border-radius:15px;
+    padding:16px;
+    margin:8px 0 12px;
 }
-
+.result-hold {
+    background:#f2f3f5;
+    border:1px solid #d4d7db;
+    border-radius:15px;
+    padding:16px;
+    margin:8px 0 12px;
+}
 .result-big {
-    font-size: 1.7rem;
-    font-weight: 900;
-    margin: 5px 0;
+    font-size:1.65rem;
+    font-weight:900;
+    margin:4px 0;
 }
-
-.mini {
-    border: 1px solid #e2e5e8;
-    border-radius: 12px;
-    padding: 10px;
-    margin-bottom: 7px;
+.small {
+    color:#6d7278;
+    font-size:0.82rem;
+    line-height:1.4;
 }
-
-.done {
-    background: #eef4ff;
-    border: 1px solid #cad8ef;
-    border-radius: 15px;
-    padding: 17px;
-    margin: 8px 0 14px;
+.bar-row {
+    margin:8px 0 11px;
 }
-
+.bar-label {
+    display:flex;
+    justify-content:space-between;
+    font-size:0.87rem;
+    font-weight:700;
+    margin-bottom:3px;
+}
+.bar-bg {
+    height:10px;
+    background:#eceff2;
+    border-radius:999px;
+    overflow:hidden;
+}
+.bar-fill {
+    height:100%;
+    background:#5b6f91;
+    border-radius:999px;
+}
+.tip {
+    background:#f7f8fa;
+    border-radius:12px;
+    padding:11px 12px;
+    font-size:0.87rem;
+    line-height:1.45;
+    margin-top:8px;
+}
 @media(max-width:600px) {
-
     .block-container {
-        padding-top: 0.45rem;
-        padding-left: 0.8rem;
-        padding-right: 0.8rem;
-        padding-bottom: 1rem;
+        padding-top:0.45rem;
+        padding-left:0.8rem;
+        padding-right:0.8rem;
+        padding-bottom:1rem;
     }
-
-    .main-title {
-        font-size: 1.45rem;
+    .main-title { font-size:1.45rem; }
+    .sub-title { font-size:0.82rem; }
+    .card { padding:10px 11px; }
+    .target-title { font-size:1.28rem; }
+    .guide { padding:9px 10px; font-size:0.81rem; }
+    .result-good,
+    .result-mid,
+    .result-bad,
+    .result-hold {
+        padding:13px;
     }
-
-    .sub-title {
-        font-size: 0.82rem;
-        margin-bottom: 0.55rem;
-    }
-
-    .card {
-        padding: 9px 11px;
-        margin-bottom: 7px;
-    }
-
-    .target {
-        font-size: 1.28rem;
-    }
-
-    .guide {
-        padding: 9px 10px;
-        font-size: 0.81rem;
-    }
-
-    .result-ok,
-    .result-no {
-        padding: 13px;
-    }
-
     button {
-        min-height: 40px !important;
+        min-height:42px !important;
     }
 }
-
 </style>
 """,
     unsafe_allow_html=True,
@@ -159,40 +166,61 @@ RESONANCES = [
     "입천장",
     "이빨·전방",
     "비강",
-    "두개골",
 ]
 
 
 INFO = {
+    "가슴": {
+        "icon": "🫁",
+        "guide": (
+            "다른 공명은 최대한 배제하고 "
+            "가슴 쪽 울림을 분명하게 만들어 /아/를 발성하세요."
+        ),
+        "tip": (
+            "가슴 쪽 울림이 더 분명하게 느껴지도록 "
+            "다시 발성해보세요."
+        ),
+    },
 
-    "가슴": (
-        "🫁",
-        "다른 공명은 최대한 배제하고 가슴 공명만 분명하게 만들어 /아/를 발성하세요.",
-    ),
+    "입천장": {
+        "icon": "👄",
+        "guide": (
+            "다른 공명은 최대한 배제하고 "
+            "입천장·구강 공간의 울림을 분명하게 만들어 /아/를 발성하세요."
+        ),
+        "tip": (
+            "입천장과 구강 공간에 울림이 모이는 감각을 "
+            "다시 확인해보세요."
+        ),
+    },
 
-    "입천장": (
-        "👄",
-        "다른 공명은 최대한 배제하고 입천장·구강 공간의 울림만 분명하게 만들어 /아/를 발성하세요.",
-    ),
+    "이빨·전방": {
+        "icon": "🦷",
+        "guide": (
+            "다른 공명은 최대한 배제하고 "
+            "윗니와 입 앞쪽에 소리가 모이도록 /아/를 발성하세요."
+        ),
+        "tip": (
+            "소리가 윗니와 입 앞쪽으로 더 선명하게 모이도록 "
+            "다시 발성해보세요."
+        ),
+    },
 
-    "이빨·전방": (
-        "🦷",
-        "다른 공명은 최대한 배제하고 윗니와 입 앞쪽에 소리가 모이도록 /아/를 발성하세요.",
-    ),
-
-    "비강": (
-        "👃",
-        "다른 공명은 최대한 배제하고 코 주변과 얼굴 중앙의 울림만 분명하게 만들어 /아/를 발성하세요.",
-    ),
-
-    "두개골": (
-        "💀",
-        "다른 공명은 최대한 배제하고 머리 위쪽에서 느껴지는 울림만 분명하게 만들어 /아/를 발성하세요.",
-    ),
+    "비강": {
+        "icon": "👃",
+        "guide": (
+            "다른 공명은 최대한 배제하고 "
+            "코 주변과 얼굴 중앙의 울림을 분명하게 만들어 /아/를 발성하세요."
+        ),
+        "tip": (
+            "코 주변과 얼굴 중앙의 울림이 더 분명한지 확인하며 "
+            "다시 발성해보세요."
+        ),
+    },
 }
 
 
-# F0는 의도적으로 분류에서 제외
+# F0는 측정하지만 분류에는 사용하지 않음
 FEATURES = [
     "f1_hz",
     "f2_hz",
@@ -207,293 +235,99 @@ FEATURES = [
 ]
 
 
-GLOBAL_MEAN = {
-
-    "f1_hz":
-        414.53556596260626,
-
-    "f2_hz":
-        1537.403933280021,
-
-    "f3_hz":
-        2686.63862367215,
-
-    "hnr_db":
-        30.701164255199377,
-
-    "spectral_centroid_hz":
-        1777.635734511814,
-
-    "spectral_tilt":
-        -24.32365232119321,
-
-    "band_80_500_pct":
-        91.29624309539795,
-
-    "band_500_1500_pct":
-        5.888846766576171,
-
-    "band_1500_3000_pct":
-        1.8783772562630474,
-
-    "band_3000_5000_pct":
-        0.9365309207438258,
-}
-
-
-GLOBAL_STD = {
-
-    "f1_hz":
-        86.41343613459281,
-
-    "f2_hz":
-        618.6489094733525,
-
-    "f3_hz":
-        327.8617395358285,
-
-    "hnr_db":
-        6.198973596714277,
-
-    "spectral_centroid_hz":
-        776.5672839668334,
-
-    "spectral_tilt":
-        11.710428586714382,
-
-    "band_80_500_pct":
-        5.825569561659128,
-
-    "band_500_1500_pct":
-        5.2336113647202005,
-
-    "band_1500_3000_pct":
-        3.1001735341103616,
-
-    "band_3000_5000_pct":
-        1.3656767213953476,
-}
-
+# =========================================================
+# 4공명 기준 모델
+# 두개골 완전 제외
+# =========================================================
 
 CENTROIDS = {
 
     "가슴": {
-
-        "f1_hz":
-            429.3799370666848,
-
-        "f2_hz":
-            1017.1615176036128,
-
-        "f3_hz":
-            2580.3789875088983,
-
-        "hnr_db":
-            24.80149227117852,
-
-        "spectral_centroid_hz":
-            1649.8053769813519,
-
-        "spectral_tilt":
-            -36.40100501880513,
-
-        "band_80_500_pct":
-            95.10030364990234,
-
-        "band_500_1500_pct":
-            4.751633865492685,
-
-        "band_1500_3000_pct":
-            0.13858066978199138,
-
-        "band_3000_5000_pct":
-            0.0094843928569129,
+        "f1_hz": 449.81686886925206,
+        "f2_hz": 1038.30057387432,
+        "f3_hz": 2564.769347715297,
+        "hnr_db": 23.732902532301974,
+        "spectral_centroid_hz": 1686.6313884693777,
+        "spectral_tilt": -37.4864777108758,
+        "band_80_500_pct": 93.78470357259114,
+        "band_500_1500_pct": 5.996769759390089,
+        "band_1500_3000_pct": 0.20982275282343227,
+        "band_3000_5000_pct": 0.008704635030072544,
     },
-
 
     "입천장": {
-
-        "f1_hz":
-            449.63294208713563,
-
-        "f2_hz":
-            911.0323934524258,
-
-        "f3_hz":
-            2582.03539012955,
-
-        "hnr_db":
-            33.95648862528039,
-
-        "spectral_centroid_hz":
-            1271.594411523234,
-
-        "spectral_tilt":
-            -31.791285104950294,
-
-        "band_80_500_pct":
-            89.28483327229817,
-
-        "band_500_1500_pct":
-            10.335038105646769,
-
-        "band_1500_3000_pct":
-            0.36595392723878223,
-
-        "band_3000_5000_pct":
-            0.014173120289342424,
+        "f1_hz": 454.05227257076325,
+        "f2_hz": 920.0919103430733,
+        "f3_hz": 2594.9459247549926,
+        "hnr_db": 33.92425150488846,
+        "spectral_centroid_hz": 1249.6360049461298,
+        "spectral_tilt": -31.7010433314199,
+        "band_80_500_pct": 88.70456205095563,
+        "band_500_1500_pct": 10.88910801070077,
+        "band_1500_3000_pct": 0.39302450844219755,
+        "band_3000_5000_pct": 0.013303857820574135,
     },
-
 
     "이빨·전방": {
-
-        "f1_hz":
-            408.7733250987476,
-
-        "f2_hz":
-            2108.0104354632076,
-
-        "f3_hz":
-            2894.2009432917475,
-
-        "hnr_db":
-            24.854095241103376,
-
-        "spectral_centroid_hz":
-            2016.0606759589994,
-
-        "spectral_tilt":
-            -16.812605367527826,
-
-        "band_80_500_pct":
-            87.87335641043526,
-
-        "band_500_1500_pct":
-            1.347805184977395,
-
-        "band_1500_3000_pct":
-            7.757015739168439,
-
-        "band_3000_5000_pct":
-            3.0218154532568797,
+        "f1_hz": 406.2235400787908,
+        "f2_hz": 2123.982267170569,
+        "f3_hz": 2918.0947226576372,
+        "hnr_db": 24.45499149753048,
+        "spectral_centroid_hz": 2109.2467772720097,
+        "spectral_tilt": -17.040266756071862,
+        "band_80_500_pct": 86.66817813449435,
+        "band_500_1500_pct": 3.1495792269706726,
+        "band_1500_3000_pct": 6.982677539189656,
+        "band_3000_5000_pct": 3.199559701813592,
     },
-
 
     "비강": {
-
-        "f1_hz":
-            255.68053047068733,
-
-        "f2_hz":
-            1664.5628130759887,
-
-        "f3_hz":
-            2240.4529698192177,
-
-        "hnr_db":
-            40.5488476802471,
-
-        "spectral_centroid_hz":
-            1103.7341741963933,
-
-        "spectral_tilt":
-            -27.16501664346996,
-
-        "band_80_500_pct":
-            99.5788083757673,
-
-        "band_500_1500_pct":
-            0.26623884907790585,
-
-        "band_1500_3000_pct":
-            0.1325980467455727,
-
-        "band_3000_5000_pct":
-            0.022349016674395056,
-    },
-
-
-    "두개골": {
-
-        "f1_hz":
-            504.14154071511206,
-
-        "f2_hz":
-            2433.660749538866,
-
-        "f3_hz":
-            3210.841422998909,
-
-        "hnr_db":
-            27.01966576527247,
-
-        "spectral_centroid_hz":
-            3208.4421217480776,
-
-        "spectral_tilt":
-            -4.114326054243489,
-
-        "band_80_500_pct":
-            86.08063507080078,
-
-        "band_500_1500_pct":
-            9.5676668712071,
-
-        "band_1500_3000_pct":
-            2.0780402762549266,
-
-        "band_3000_5000_pct":
-            2.2736596209662303,
+        "f1_hz": 255.4618998905658,
+        "f2_hz": 1661.51094371261,
+        "f3_hz": 2260.9144028566243,
+        "hnr_db": 40.76973829274046,
+        "spectral_centroid_hz": 1049.7815441814612,
+        "spectral_tilt": -27.336919138839512,
+        "band_80_500_pct": 99.63513692220052,
+        "band_500_1500_pct": 0.23184568186600998,
+        "band_1500_3000_pct": 0.11247787831558116,
+        "band_3000_5000_pct": 0.020538966740584978,
     },
 }
 
 
-def make_sequence():
+# 각 공명 반복 측정에서 실제로 나타난 변동폭
+POOLED_STD = {
+    "f1_hz": 33.1148377360414,
+    "f2_hz": 93.48950964018955,
+    "f3_hz": 82.9851860269652,
+    "hnr_db": 1.9782225366868083,
+    "spectral_centroid_hz": 230.7192962474501,
+    "spectral_tilt": 3.0352007554915277,
+    "band_80_500_pct": 4.053594853647912,
+    "band_500_1500_pct": 4.066813548561021,
+    "band_1500_3000_pct": 1.3700699238121068,
+    "band_3000_5000_pct": 0.411534036084007,
+}
 
-    sequence = RESONANCES * 2
 
-    random.shuffle(
-        sequence
-    )
-
-    return sequence
-
+# =========================================================
+# SESSION
+# =========================================================
 
 defaults = {
-
-    "sequence":
-        make_sequence(),
-
-    "test_index":
-        0,
-
-    "audio_bytes":
-        None,
-
-    "recorder_id":
-        0,
-
-    "page":
-        "record",
-
-    "current_features":
-        None,
-
-    "current_prediction":
-        None,
-
-    "current_distances":
-        None,
-
-    "results":
-        [],
+    "page": "select",
+    "target": None,
+    "audio_bytes": None,
+    "recorder_id": 0,
+    "result": None,
+    "history": [],
 }
 
 
 for key, value in defaults.items():
 
     if key not in st.session_state:
-
         st.session_state[key] = value
 
 
@@ -736,761 +570,781 @@ RECORDER_CSS = """
 
 
 RECORDER_JS = r"""
-export default function(component){
+export default function(component) {
 
-const {
-    parentElement,
-    setStateValue
-} = component;
-
-
-const button =
-    parentElement.querySelector("#recordButton");
-
-const statusText =
-    parentElement.querySelector("#statusText");
-
-const timerText =
-    parentElement.querySelector("#timerText");
-
-const progressBar =
-    parentElement.querySelector("#progressBar");
-
-const helpText =
-    parentElement.querySelector("#helpText");
+    const {
+        parentElement,
+        setStateValue
+    } = component;
 
 
-const RECORD_MS = 5000;
+    const button =
+        parentElement.querySelector("#recordButton");
+
+    const statusText =
+        parentElement.querySelector("#statusText");
+
+    const timerText =
+        parentElement.querySelector("#timerText");
+
+    const progressBar =
+        parentElement.querySelector("#progressBar");
+
+    const helpText =
+        parentElement.querySelector("#helpText");
 
 
-let recording = false;
-
-let stream = null;
-
-let audioContext = null;
-
-let source = null;
-
-let processor = null;
-
-let silentGain = null;
-
-let buffers = [];
-
-let sampleRate = 44100;
-
-let startTime = 0;
-
-let timerFrame = null;
-
-let stopTimer = null;
+    const RECORD_MS = 5000;
 
 
-function formatTime(ms){
+    let recording = false;
 
-    const sec =
-        Math.min(
-            ms,
-            RECORD_MS
-        )
-        /
-        1000;
+    let stream = null;
 
-    return "00:"
-        +
-        sec
-        .toFixed(1)
-        .padStart(
-            4,
-            "0"
-        );
-}
+    let audioContext = null;
 
+    let source = null;
 
-function mergeBuffers(parts){
+    let processor = null;
 
-    let total = 0;
+    let silentGain = null;
 
-    for(const part of parts){
+    let buffers = [];
 
-        total +=
-            part.length;
-    }
+    let sampleRate = 44100;
 
-    const merged =
-        new Float32Array(
-            total
-        );
+    let startTime = 0;
 
-    let offset = 0;
+    let timerFrame = null;
 
-    for(const part of parts){
-
-        merged.set(
-            part,
-            offset
-        );
-
-        offset +=
-            part.length;
-    }
-
-    return merged;
-}
+    let stopTimer = null;
 
 
-function writeString(
-    view,
-    offset,
-    text
-){
+    function formatTime(ms) {
 
-    for(
-        let i = 0;
-        i < text.length;
-        i++
-    ){
+        const sec =
+            Math.min(
+                ms,
+                RECORD_MS
+            )
+            /
+            1000;
 
-        view.setUint8(
-            offset + i,
-            text.charCodeAt(i)
-        );
-    }
-}
-
-
-function encodeWav(
-    samples,
-    sr
-){
-
-    const buffer =
-        new ArrayBuffer(
-            44
+        return "00:"
             +
-            samples.length * 2
-        );
-
-    const view =
-        new DataView(
-            buffer
-        );
-
-
-    writeString(
-        view,
-        0,
-        "RIFF"
-    );
-
-    view.setUint32(
-        4,
-        36 + samples.length * 2,
-        true
-    );
-
-    writeString(
-        view,
-        8,
-        "WAVE"
-    );
-
-    writeString(
-        view,
-        12,
-        "fmt "
-    );
-
-    view.setUint32(
-        16,
-        16,
-        true
-    );
-
-    view.setUint16(
-        20,
-        1,
-        true
-    );
-
-    view.setUint16(
-        22,
-        1,
-        true
-    );
-
-    view.setUint32(
-        24,
-        sr,
-        true
-    );
-
-    view.setUint32(
-        28,
-        sr * 2,
-        true
-    );
-
-    view.setUint16(
-        32,
-        2,
-        true
-    );
-
-    view.setUint16(
-        34,
-        16,
-        true
-    );
-
-    writeString(
-        view,
-        36,
-        "data"
-    );
-
-    view.setUint32(
-        40,
-        samples.length * 2,
-        true
-    );
+            sec
+            .toFixed(1)
+            .padStart(
+                4,
+                "0"
+            );
+    }
 
 
-    let offset = 44;
+    function mergeBuffers(parts) {
+
+        let total = 0;
+
+        for (const part of parts) {
+
+            total +=
+                part.length;
+        }
 
 
-    for(
-        let i = 0;
-        i < samples.length;
-        i++
-    ){
-
-        let sample =
-            Math.max(
-                -1,
-                Math.min(
-                    1,
-                    samples[i]
-                )
+        const merged =
+            new Float32Array(
+                total
             );
 
 
-        sample =
-            sample < 0
-            ?
-            sample * 0x8000
-            :
-            sample * 0x7FFF;
+        let offset = 0;
 
 
-        view.setInt16(
-            offset,
-            sample,
+        for (const part of parts) {
+
+            merged.set(
+                part,
+                offset
+            );
+
+            offset +=
+                part.length;
+        }
+
+
+        return merged;
+    }
+
+
+    function writeString(
+        view,
+        offset,
+        text
+    ) {
+
+        for (
+            let i = 0;
+            i < text.length;
+            i++
+        ) {
+
+            view.setUint8(
+                offset + i,
+                text.charCodeAt(i)
+            );
+        }
+    }
+
+
+    function encodeWav(
+        samples,
+        sr
+    ) {
+
+        const buffer =
+            new ArrayBuffer(
+                44
+                +
+                samples.length * 2
+            );
+
+
+        const view =
+            new DataView(
+                buffer
+            );
+
+
+        writeString(
+            view,
+            0,
+            "RIFF"
+        );
+
+
+        view.setUint32(
+            4,
+            36 + samples.length * 2,
             true
         );
 
 
-        offset += 2;
-    }
-
-
-    return new Blob(
-        [view],
-        {
-            type:"audio/wav"
-        }
-    );
-}
-
-
-function blobToBase64(blob){
-
-    return new Promise(
-        (
-            resolve,
-            reject
-        ) => {
-
-            const reader =
-                new FileReader();
-
-
-            reader.onloadend =
-                () => {
-
-                    const value =
-                        reader.result;
-
-
-                    resolve(
-                        value.substring(
-                            value.indexOf(",")
-                            +
-                            1
-                        )
-                    );
-                };
-
-
-            reader.onerror =
-                reject;
-
-
-            reader.readAsDataURL(
-                blob
-            );
-        }
-    );
-}
-
-
-function updateTimer(){
-
-    if(!recording){
-        return;
-    }
-
-
-    const elapsed =
-        performance.now()
-        -
-        startTime;
-
-
-    const capped =
-        Math.min(
-            elapsed,
-            RECORD_MS
+        writeString(
+            view,
+            8,
+            "WAVE"
         );
 
 
-    timerText.textContent =
-        formatTime(
-            capped
+        writeString(
+            view,
+            12,
+            "fmt "
         );
 
 
-    progressBar.style.width =
-        (
-            capped
-            /
-            RECORD_MS
-            *
-            100
-        )
-        +
-        "%";
-
-
-    timerFrame =
-        requestAnimationFrame(
-            updateTimer
-        );
-}
-
-
-async function cleanup(){
-
-    try{
-
-        if(processor){
-            processor.disconnect();
-        }
-
-    }catch{}
-
-
-    try{
-
-        if(source){
-            source.disconnect();
-        }
-
-    }catch{}
-
-
-    try{
-
-        if(silentGain){
-            silentGain.disconnect();
-        }
-
-    }catch{}
-
-
-    if(stream){
-
-        for(
-            const track
-            of
-            stream.getTracks()
-        ){
-
-            track.stop();
-        }
-    }
-
-
-    if(audioContext){
-
-        try{
-
-            await audioContext.close();
-
-        }catch{}
-    }
-
-
-    processor = null;
-
-    source = null;
-
-    silentGain = null;
-
-    stream = null;
-
-    audioContext = null;
-}
-
-
-async function stopRecording(){
-
-    if(!recording){
-        return;
-    }
-
-
-    recording = false;
-
-
-    clearTimeout(
-        stopTimer
-    );
-
-
-    cancelAnimationFrame(
-        timerFrame
-    );
-
-
-    timerText.textContent =
-        "00:05.0";
-
-
-    progressBar.style.width =
-        "100%";
-
-
-    button.classList.remove(
-        "recording"
-    );
-
-
-    statusText.classList.remove(
-        "recording"
-    );
-
-
-    statusText.textContent =
-        "저장 중...";
-
-
-    helpText.textContent =
-        "잠시만 기다려주세요.";
-
-
-    const merged =
-        mergeBuffers(
-            buffers
+        view.setUint32(
+            16,
+            16,
+            true
         );
 
 
-    const targetFrames =
-        Math.round(
-            sampleRate
-            *
-            5
+        view.setUint16(
+            20,
+            1,
+            true
         );
 
 
-    const samples =
-        new Float32Array(
-            targetFrames
+        view.setUint16(
+            22,
+            1,
+            true
         );
 
 
-    samples.set(
-        merged.subarray(
-            0,
-            Math.min(
-                merged.length,
-                targetFrames
-            )
-        )
-    );
-
-
-    const wavBlob =
-        encodeWav(
-            samples,
-            sampleRate
+        view.setUint32(
+            24,
+            sr,
+            true
         );
 
 
-    await cleanup();
-
-
-    const audioBase64 =
-        await blobToBase64(
-            wavBlob
+        view.setUint32(
+            28,
+            sr * 2,
+            true
         );
 
 
-    button.classList.add(
-        "done"
-    );
+        view.setUint16(
+            32,
+            2,
+            true
+        );
 
 
-    statusText.classList.add(
-        "done"
-    );
+        view.setUint16(
+            34,
+            16,
+            true
+        );
 
 
-    statusText.textContent =
-        "녹음 완료";
+        writeString(
+            view,
+            36,
+            "data"
+        );
 
 
-    helpText.textContent =
-        "5초 녹음이 저장되었습니다.";
+        view.setUint32(
+            40,
+            samples.length * 2,
+            true
+        );
 
 
-    setStateValue(
-        "audio_b64",
-        audioBase64
-    );
-}
+        let offset = 44;
 
 
-async function startRecording(){
+        for (
+            let i = 0;
+            i < samples.length;
+            i++
+        ) {
 
-    if(recording){
-        return;
-    }
-
-
-    try{
-
-        stream =
-            await navigator.mediaDevices.getUserMedia({
-
-                audio:{
-
-                    echoCancellation:false,
-
-                    noiseSuppression:false,
-
-                    autoGainControl:false,
-
-                    channelCount:1
-                }
-            });
-
-
-        audioContext =
-            new (
-                window.AudioContext
-                ||
-                window.webkitAudioContext
-            )();
-
-
-        sampleRate =
-            audioContext.sampleRate;
-
-
-        source =
-            audioContext.createMediaStreamSource(
-                stream
-            );
-
-
-        processor =
-            audioContext.createScriptProcessor(
-                4096,
-                1,
-                1
-            );
-
-
-        silentGain =
-            audioContext.createGain();
-
-
-        silentGain.gain.value =
-            0;
-
-
-        buffers = [];
-
-
-        processor.onaudioprocess =
-            (event) => {
-
-                if(!recording){
-                    return;
-                }
-
-
-                const input =
-                    event
-                    .inputBuffer
-                    .getChannelData(0);
-
-
-                buffers.push(
-                    new Float32Array(
-                        input
+            let sample =
+                Math.max(
+                    -1,
+                    Math.min(
+                        1,
+                        samples[i]
                     )
                 );
-            };
 
 
-        source.connect(
-            processor
+            sample =
+                sample < 0
+                ?
+                sample * 0x8000
+                :
+                sample * 0x7FFF;
+
+
+            view.setInt16(
+                offset,
+                sample,
+                true
+            );
+
+
+            offset += 2;
+        }
+
+
+        return new Blob(
+            [view],
+            {
+                type:"audio/wav"
+            }
+        );
+    }
+
+
+    function blobToBase64(blob) {
+
+        return new Promise(
+            (
+                resolve,
+                reject
+            ) => {
+
+                const reader =
+                    new FileReader();
+
+
+                reader.onloadend =
+                    () => {
+
+                        const value =
+                            reader.result;
+
+
+                        resolve(
+                            value.substring(
+                                value.indexOf(",") + 1
+                            )
+                        );
+                    };
+
+
+                reader.onerror =
+                    reject;
+
+
+                reader.readAsDataURL(
+                    blob
+                );
+            }
+        );
+    }
+
+
+    function updateTimer() {
+
+        if (!recording) {
+            return;
+        }
+
+
+        const elapsed =
+            performance.now()
+            -
+            startTime;
+
+
+        const capped =
+            Math.min(
+                elapsed,
+                RECORD_MS
+            );
+
+
+        timerText.textContent =
+            formatTime(
+                capped
+            );
+
+
+        progressBar.style.width =
+            (
+                capped
+                /
+                RECORD_MS
+                *
+                100
+            )
+            +
+            "%";
+
+
+        timerFrame =
+            requestAnimationFrame(
+                updateTimer
+            );
+    }
+
+
+    async function cleanup() {
+
+        try {
+
+            if (processor) {
+                processor.disconnect();
+            }
+
+        } catch {}
+
+
+        try {
+
+            if (source) {
+                source.disconnect();
+            }
+
+        } catch {}
+
+
+        try {
+
+            if (silentGain) {
+                silentGain.disconnect();
+            }
+
+        } catch {}
+
+
+        if (stream) {
+
+            for (
+                const track
+                of
+                stream.getTracks()
+            ) {
+
+                track.stop();
+            }
+        }
+
+
+        if (audioContext) {
+
+            try {
+
+                await audioContext.close();
+
+            } catch {}
+        }
+
+
+        processor = null;
+
+        source = null;
+
+        silentGain = null;
+
+        stream = null;
+
+        audioContext = null;
+    }
+
+
+    async function stopRecording() {
+
+        if (!recording) {
+            return;
+        }
+
+
+        recording =
+            false;
+
+
+        clearTimeout(
+            stopTimer
         );
 
 
-        processor.connect(
-            silentGain
+        cancelAnimationFrame(
+            timerFrame
         );
 
 
-        silentGain.connect(
-            audioContext.destination
-        );
+        timerText.textContent =
+            "00:05.0";
 
 
-        recording = true;
+        progressBar.style.width =
+            "100%";
 
 
         button.classList.remove(
-            "done"
-        );
-
-
-        button.classList.add(
             "recording"
         );
 
 
         statusText.classList.remove(
-            "done"
-        );
-
-
-        statusText.classList.add(
             "recording"
         );
 
 
         statusText.textContent =
-            "● 녹음 중";
+            "저장 중...";
 
 
         helpText.textContent =
-            "5초 후 자동으로 종료됩니다.";
+            "잠시만 기다려주세요.";
 
 
-        timerText.textContent =
-            "00:00.0";
-
-
-        progressBar.style.width =
-            "0%";
-
-
-        startTime =
-            performance.now();
-
-
-        updateTimer();
-
-
-        stopTimer =
-            setTimeout(
-                stopRecording,
-                RECORD_MS
+        const merged =
+            mergeBuffers(
+                buffers
             );
 
 
-    }catch(error){
+        const targetFrames =
+            Math.round(
+                sampleRate
+                *
+                5
+            );
 
-        console.error(
-            error
+
+        const samples =
+            new Float32Array(
+                targetFrames
+            );
+
+
+        samples.set(
+            merged.subarray(
+                0,
+                Math.min(
+                    merged.length,
+                    targetFrames
+                )
+            )
+        );
+
+
+        const wavBlob =
+            encodeWav(
+                samples,
+                sampleRate
+            );
+
+
+        await cleanup();
+
+
+        const audioBase64 =
+            await blobToBase64(
+                wavBlob
+            );
+
+
+        button.classList.add(
+            "done"
+        );
+
+
+        statusText.classList.add(
+            "done"
         );
 
 
         statusText.textContent =
-            "마이크 사용 불가";
+            "녹음 완료";
 
 
         helpText.textContent =
-            "브라우저의 마이크 권한을 허용해주세요.";
+            "5초 녹음이 저장되었습니다.";
+
+
+        setStateValue(
+            "audio_b64",
+            audioBase64
+        );
     }
-}
 
 
-button.onclick =
-    () => {
+    async function startRecording() {
 
-        if(!recording){
+        if (recording) {
+            return;
+        }
 
-            startRecording();
+
+        try {
+
+            stream =
+                await navigator.mediaDevices.getUserMedia({
+
+                    audio: {
+
+                        echoCancellation:
+                            false,
+
+                        noiseSuppression:
+                            false,
+
+                        autoGainControl:
+                            false,
+
+                        channelCount:
+                            1
+                    }
+                });
+
+
+            audioContext =
+                new (
+                    window.AudioContext
+                    ||
+                    window.webkitAudioContext
+                )();
+
+
+            sampleRate =
+                audioContext.sampleRate;
+
+
+            source =
+                audioContext.createMediaStreamSource(
+                    stream
+                );
+
+
+            processor =
+                audioContext.createScriptProcessor(
+                    4096,
+                    1,
+                    1
+                );
+
+
+            silentGain =
+                audioContext.createGain();
+
+
+            silentGain.gain.value =
+                0;
+
+
+            buffers = [];
+
+
+            processor.onaudioprocess =
+                (event) => {
+
+                    if (!recording) {
+                        return;
+                    }
+
+
+                    const input =
+                        event
+                        .inputBuffer
+                        .getChannelData(0);
+
+
+                    buffers.push(
+                        new Float32Array(
+                            input
+                        )
+                    );
+                };
+
+
+            source.connect(
+                processor
+            );
+
+
+            processor.connect(
+                silentGain
+            );
+
+
+            silentGain.connect(
+                audioContext.destination
+            );
+
+
+            recording =
+                true;
+
+
+            button.classList.remove(
+                "done"
+            );
+
+
+            button.classList.add(
+                "recording"
+            );
+
+
+            statusText.classList.remove(
+                "done"
+            );
+
+
+            statusText.classList.add(
+                "recording"
+            );
+
+
+            statusText.textContent =
+                "● 녹음 중";
+
+
+            helpText.textContent =
+                "5초 후 자동으로 종료됩니다.";
+
+
+            timerText.textContent =
+                "00:00.0";
+
+
+            progressBar.style.width =
+                "0%";
+
+
+            startTime =
+                performance.now();
+
+
+            updateTimer();
+
+
+            stopTimer =
+                setTimeout(
+                    stopRecording,
+                    RECORD_MS
+                );
+
+
+        } catch (error) {
+
+            console.error(
+                error
+            );
+
+
+            statusText.textContent =
+                "마이크 사용 불가";
+
+
+            helpText.textContent =
+                "브라우저의 마이크 권한을 허용해주세요.";
+        }
+    }
+
+
+    button.onclick =
+        () => {
+
+            if (!recording) {
+
+                startRecording();
+            }
+        };
+
+
+    return () => {
+
+        clearTimeout(
+            stopTimer
+        );
+
+
+        cancelAnimationFrame(
+            timerFrame
+        );
+
+
+        if (stream) {
+
+            for (
+                const track
+                of
+                stream.getTracks()
+            ) {
+
+                track.stop();
+            }
+        }
+
+
+        if (audioContext) {
+
+            try {
+
+                audioContext.close();
+
+            } catch {}
         }
     };
-
-
-return () => {
-
-    clearTimeout(
-        stopTimer
-    );
-
-
-    cancelAnimationFrame(
-        timerFrame
-    );
-
-
-    if(stream){
-
-        for(
-            const track
-            of
-            stream.getTracks()
-        ){
-
-            track.stop();
-        }
-    }
-
-
-    if(audioContext){
-
-        try{
-
-            audioContext.close();
-
-        }catch{}
-    }
-};
-
 }
 """
 
 
 recorder_component = st.components.v2.component(
-    "blind_resonance_recorder_v2",
+    "student_resonance_recorder_v1",
     html=RECORDER_HTML,
     css=RECORDER_CSS,
     js=RECORDER_JS,
@@ -1509,14 +1363,17 @@ def five_second_recorder(key):
         height=205,
     )
 
+
     audio_b64 = getattr(
         result,
         "audio_b64",
         None
     )
 
+
     if not audio_b64:
         return None
+
 
     try:
 
@@ -1541,14 +1398,18 @@ def safe_float(value):
             value
         )
 
+
         if np.isfinite(
             value
         ):
+
             return value
+
 
     except Exception:
 
         pass
+
 
     return np.nan
 
@@ -1566,11 +1427,13 @@ def band_ratio(
         (frequencies < high)
     )
 
+
     total_mask = (
         (frequencies >= 80)
         &
         (frequencies < 5000)
     )
+
 
     total = (
         np.sum(
@@ -1581,6 +1444,7 @@ def band_ratio(
         +
         1e-12
     )
+
 
     return float(
         np.sum(
@@ -1606,13 +1470,16 @@ def spectral_tilt(
         (frequencies <= 5000)
     )
 
+
     freq = frequencies[
         mask
     ]
 
+
     pwr = power[
         mask
     ]
+
 
     valid = (
         (freq > 0)
@@ -1620,20 +1487,26 @@ def spectral_tilt(
         (pwr > 0)
     )
 
+
     freq = freq[
         valid
     ]
+
 
     pwr = pwr[
         valid
     ]
 
+
     if len(freq) < 10:
+
         return np.nan
+
 
     x = np.log10(
         freq
     )
+
 
     y = (
         10
@@ -1642,6 +1515,7 @@ def spectral_tilt(
             pwr + 1e-12
         )
     )
+
 
     return float(
         np.polyfit(
@@ -1663,15 +1537,20 @@ def mean_formant(
         duration * 0.15
     )
 
+
     end = min(
         duration - 0.15,
         duration * 0.85
     )
 
+
     if end <= start:
+
         return np.nan
 
+
     values = []
+
 
     for t in np.linspace(
         start,
@@ -1692,6 +1571,7 @@ def mean_formant(
                 )
             )
 
+
             if np.isfinite(
                 value
             ):
@@ -1700,12 +1580,16 @@ def mean_formant(
                     value
                 )
 
+
         except Exception:
 
             pass
 
+
     if not values:
+
         return np.nan
+
 
     return float(
         np.median(
@@ -1723,9 +1607,11 @@ def analyze_audio(
         delete=True
     ) as tmp:
 
+
         tmp.write(
             audio_bytes
         )
+
 
         tmp.flush()
 
@@ -1743,16 +1629,18 @@ def analyze_audio(
         )
 
 
-        if (
+        voice_duration = (
             len(y_trim)
             /
             sr
-            <
-            2
-        ):
+        )
+
+
+        if voice_duration < 2:
 
             raise ValueError(
-                "유효한 발성 시간이 너무 짧습니다."
+                "유효한 발성 시간이 너무 짧습니다. "
+                "/아/를 충분히 유지해주세요."
             )
 
 
@@ -1886,13 +1774,10 @@ def analyze_audio(
         )
 
 
-        tilt = spectral_tilt(
-            mean_power,
-            frequencies
-        )
-
-
         return {
+
+            "voice_duration_sec":
+                voice_duration,
 
             "f0_hz":
                 f0,
@@ -1913,7 +1798,10 @@ def analyze_audio(
                 centroid,
 
             "spectral_tilt":
-                tilt,
+                spectral_tilt(
+                    mean_power,
+                    frequencies
+                ),
 
             "band_80_500_pct":
                 band_ratio(
@@ -1957,66 +1845,53 @@ def classify(
     features
 ):
 
-    sample = []
-
-    for key in FEATURES:
-
-        value = features[
-            key
-        ]
-
-        if not np.isfinite(
-            value
-        ):
-
-            raise ValueError(
-                f"{key} 값을 안정적으로 측정하지 못했습니다."
-            )
+    distances = {}
 
 
-        sample.append(
-            (
+    for resonance, centroid in CENTROIDS.items():
+
+        z_values = []
+
+
+        for key in FEATURES:
+
+            value = features[
+                key
+            ]
+
+
+            if not np.isfinite(
                 value
-                -
-                GLOBAL_MEAN[
-                    key
-                ]
-            )
-            /
-            max(
-                GLOBAL_STD[
+            ):
+
+                raise ValueError(
+                    f"{key} 값을 안정적으로 측정하지 못했습니다."
+                )
+
+
+            sd = max(
+                POOLED_STD[
                     key
                 ],
                 1e-12
             )
-        )
 
 
-    sample = np.array(
-        sample,
-        dtype=float
-    )
-
-
-    distances = {}
-
-
-    for resonance, data in CENTROIDS.items():
-
-        centroid = np.array(
-            [
+            z_values.append(
                 (
-                    data[key]
+                    value
                     -
-                    GLOBAL_MEAN[key]
+                    centroid[
+                        key
+                    ]
                 )
                 /
-                max(
-                    GLOBAL_STD[key],
-                    1e-12
-                )
-                for key in FEATURES
-            ],
+                sd
+            )
+
+
+        z_values = np.array(
+            z_values,
             dtype=float
         )
 
@@ -2024,10 +1899,12 @@ def classify(
         distances[
             resonance
         ] = float(
-            np.linalg.norm(
-                sample
-                -
-                centroid
+            np.sqrt(
+                np.mean(
+                    z_values
+                    **
+                    2
+                )
             )
         )
 
@@ -2038,47 +1915,325 @@ def classify(
     )
 
 
+    raw = {
+        name:
+            np.exp(
+                -distance
+            )
+        for name, distance in ordered
+    }
+
+
+    total = (
+        sum(
+            raw.values()
+        )
+        +
+        1e-12
+    )
+
+
+    similarity = {
+        name:
+            raw[
+                name
+            ]
+            /
+            total
+            *
+            100
+        for name in raw
+    }
+
+
     return (
-        ordered[0][0],
+        ordered,
+        similarity
+    )
+
+
+def build_result(
+    target,
+    ordered,
+    similarity
+):
+
+    prediction = (
+        ordered[
+            0
+        ][
+            0
+        ]
+    )
+
+
+    d1 = (
+        ordered[
+            0
+        ][
+            1
+        ]
+    )
+
+
+    d2 = (
+        ordered[
+            1
+        ][
+            1
+        ]
+    )
+
+
+    target_rank = (
+        [
+            name
+            for name, _
+            in ordered
+        ]
+        .index(
+            target
+        )
+        +
+        1
+    )
+
+
+    target_distance = dict(
         ordered
+    )[
+        target
+    ]
+
+
+    margin = (
+        (
+            d2
+            -
+            d1
+        )
+        /
+        max(
+            d2,
+            1e-9
+        )
     )
 
 
-def reset_test():
-
-    st.session_state.sequence = (
-        make_sequence()
+    out_of_reference = (
+        d1 > 3.0
     )
 
-    st.session_state.test_index = (
-        0
-    )
+
+    if out_of_reference:
+
+        status = (
+            "판정 보류"
+        )
+
+
+        css = (
+            "result-hold"
+        )
+
+
+        message = (
+            "현재 기준 데이터와 차이가 커서 "
+            "공명을 자신 있게 판정하기 어렵습니다."
+        )
+
+
+    elif prediction == target:
+
+        if margin >= 0.25:
+
+            status = (
+                "잘 되고 있습니다"
+            )
+
+
+            css = (
+                "result-good"
+            )
+
+
+            message = (
+                f"현재 발성은 {target} 공명에 "
+                "가장 뚜렷하게 가깝습니다."
+            )
+
+
+        else:
+
+            status = (
+                "방향은 맞습니다"
+            )
+
+
+            css = (
+                "result-mid"
+            )
+
+
+            message = (
+                f"{target} 공명이 가장 가깝지만 "
+                "다른 공명과의 경계가 아직 크지 않습니다."
+            )
+
+
+    else:
+
+        if (
+            target_rank == 2
+            and
+            target_distance
+            <=
+            d1 * 1.30
+        ):
+
+            status = (
+                "방향은 맞습니다"
+            )
+
+
+            css = (
+                "result-mid"
+            )
+
+
+            message = (
+                f"{target} 공명도 가깝지만 "
+                f"현재는 {prediction} 공명이 "
+                "조금 더 강하게 나타납니다."
+            )
+
+
+        else:
+
+            status = (
+                "다른 공명이 더 가깝습니다"
+            )
+
+
+            css = (
+                "result-bad"
+            )
+
+
+            message = (
+                f"현재 발성은 목표인 {target}보다 "
+                f"{prediction} 공명에 더 가깝게 나타납니다."
+            )
+
+
+    if out_of_reference:
+
+        confidence = (
+            "낮음"
+        )
+
+
+    elif margin >= 0.35:
+
+        confidence = (
+            "높음"
+        )
+
+
+    elif margin >= 0.15:
+
+        confidence = (
+            "보통"
+        )
+
+
+    else:
+
+        confidence = (
+            "낮음"
+        )
+
+
+    return {
+
+        "target":
+            target,
+
+        "prediction":
+            prediction,
+
+        "status":
+            status,
+
+        "css":
+            css,
+
+        "message":
+            message,
+
+        "confidence":
+            confidence,
+
+        "target_rank":
+            target_rank,
+
+        "nearest_distance":
+            d1,
+
+        "margin":
+            margin,
+
+        "out_of_reference":
+            out_of_reference,
+
+        "similarity":
+            similarity,
+
+        "ordered":
+            ordered,
+    }
+
+
+def reset_measurement(
+    keep_target=True
+):
 
     st.session_state.audio_bytes = (
         None
     )
 
+
+    st.session_state.result = (
+        None
+    )
+
+
     st.session_state.recorder_id += (
         1
     )
 
-    st.session_state.page = (
-        "record"
-    )
 
-    st.session_state.current_features = (
-        None
-    )
+    if (
+        keep_target
+        and
+        st.session_state.target
+    ):
 
-    st.session_state.current_prediction = (
-        None
-    )
+        st.session_state.page = (
+            "record"
+        )
 
-    st.session_state.current_distances = (
-        None
-    )
 
-    st.session_state.results = []
+    else:
+
+        st.session_state.target = (
+            None
+        )
+
+
+        st.session_state.page = (
+            "select"
+        )
 
 
 # =========================================================
@@ -2087,62 +2242,152 @@ def reset_test():
 
 st.markdown(
     """
+<div class="beta">
+남성용 · 연구용 베타
+</div>
+
 <div class="main-title">
-🎙️ 남성 공명 독립 검증 테스트 2
+🎙️ 공명 훈련 피드백
 </div>
-""",
-    unsafe_allow_html=True,
-)
 
-
-st.markdown(
-    """
 <div class="sub-title">
-입천장 모델을 새 데이터로 보정한 뒤,
-새 발성 10개로 다시 검증합니다.
-F0는 분류에 사용하지 않습니다.
+가슴 · 입천장 · 이빨·전방 · 비강 중 하나를 선택하고
+/아/를 5초간 발성하세요.
 </div>
 """,
     unsafe_allow_html=True,
 )
+
+
+# =========================================================
+# SELECT
+# =========================================================
+
+if st.session_state.page == "select":
+
+    st.markdown(
+        """
+<div class="card">
+
+<b>연습할 공명을 선택하세요.</b><br>
+
+<span class="small">
+두개골 공명은 이번 버전부터 분석 대상에서 제외했습니다.
+</span>
+
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+
+
+    col1, col2 = st.columns(
+        2
+    )
+
+
+    with col1:
+
+        if st.button(
+            "🫁 가슴",
+            use_container_width=True
+        ):
+
+            st.session_state.target = (
+                "가슴"
+            )
+
+
+            st.session_state.page = (
+                "record"
+            )
+
+
+            st.rerun()
+
+
+        if st.button(
+            "🦷 이빨·전방",
+            use_container_width=True
+        ):
+
+            st.session_state.target = (
+                "이빨·전방"
+            )
+
+
+            st.session_state.page = (
+                "record"
+            )
+
+
+            st.rerun()
+
+
+    with col2:
+
+        if st.button(
+            "👄 입천장",
+            use_container_width=True
+        ):
+
+            st.session_state.target = (
+                "입천장"
+            )
+
+
+            st.session_state.page = (
+                "record"
+            )
+
+
+            st.rerun()
+
+
+        if st.button(
+            "👃 비강",
+            use_container_width=True
+        ):
+
+            st.session_state.target = (
+                "비강"
+            )
+
+
+            st.session_state.page = (
+                "record"
+            )
+
+
+            st.rerun()
 
 
 # =========================================================
 # RECORD
 # =========================================================
 
-if st.session_state.page == "record":
-
-    idx = (
-        st.session_state.test_index
-    )
+elif st.session_state.page == "record":
 
     target = (
-        st.session_state.sequence[
-            idx
-        ]
+        st.session_state.target
     )
 
-    icon, guide = INFO[
+
+    info = INFO[
         target
     ]
-
-
-    st.progress(
-        idx / 10
-    )
 
 
     st.markdown(
         f"""
 <div class="card">
 
-<div style="font-size:.78rem;color:#777;font-weight:700">
-TEST {idx + 1} / 10
+<div class="small">
+현재 목표
 </div>
 
-<div class="target">
-{icon} {target} 공명을 발성하세요
+<div class="target-title">
+{info['icon']} {target}
 </div>
 
 </div>
@@ -2157,10 +2402,7 @@ TEST {idx + 1} / 10
 
 <b>/아/를 약 5초간 유지하세요.</b><br>
 
-{guide}<br>
-
-캘리브레이션 때와 같은 방식으로 발성하고,
-일부러 결과를 맞추려고 음높이를 바꾸지는 마세요.
+{info['guide']}
 
 </div>
 """,
@@ -2169,7 +2411,13 @@ TEST {idx + 1} / 10
 
 
     audio = five_second_recorder(
-        f"blind2_{st.session_state.recorder_id}"
+        key=(
+            "student_"
+            +
+            str(
+                st.session_state.recorder_id
+            )
+        )
     )
 
 
@@ -2179,9 +2427,24 @@ TEST {idx + 1} / 10
             audio
         )
 
+
         st.session_state.page = (
             "review"
         )
+
+
+        st.rerun()
+
+
+    if st.button(
+        "← 다른 공명 선택",
+        use_container_width=True
+    ):
+
+        reset_measurement(
+            keep_target=False
+        )
+
 
         st.rerun()
 
@@ -2192,14 +2455,8 @@ TEST {idx + 1} / 10
 
 elif st.session_state.page == "review":
 
-    idx = (
-        st.session_state.test_index
-    )
-
     target = (
-        st.session_state.sequence[
-            idx
-        ]
+        st.session_state.target
     )
 
 
@@ -2207,9 +2464,11 @@ elif st.session_state.page == "review":
         f"""
 <div class="card">
 
-<b>TEST {idx + 1} / 10</b><br>
+<b>
+{INFO[target]['icon']} {target}
+</b>
 
-{target} 공명 녹음 확인
+공명 녹음 확인
 
 </div>
 """,
@@ -2235,17 +2494,10 @@ elif st.session_state.page == "review":
             use_container_width=True
         ):
 
-            st.session_state.audio_bytes = (
-                None
+            reset_measurement(
+                keep_target=True
             )
 
-            st.session_state.recorder_id += (
-                1
-            )
-
-            st.session_state.page = (
-                "record"
-            )
 
             st.rerun()
 
@@ -2261,33 +2513,117 @@ elif st.session_state.page == "review":
             try:
 
                 with st.spinner(
-                    "새 모델이 공명을 판별하고 있습니다..."
+                    "공명 특성을 분석하고 있습니다..."
                 ):
 
                     features = analyze_audio(
                         st.session_state.audio_bytes
                     )
 
-                    prediction, distances = classify(
+
+                    ordered, similarity = classify(
                         features
                     )
 
 
-                st.session_state.current_features = (
-                    features
-                )
+                    result = build_result(
+                        target,
+                        ordered,
+                        similarity
+                    )
 
-                st.session_state.current_prediction = (
-                    prediction
-                )
 
-                st.session_state.current_distances = (
-                    distances
-                )
+                    history_row = {
 
-                st.session_state.page = (
-                    "result"
-                )
+                        "목표":
+                            target,
+
+                        "판정":
+                            result[
+                                "prediction"
+                            ],
+
+                        "상태":
+                            result[
+                                "status"
+                            ],
+
+                        "신뢰도":
+                            result[
+                                "confidence"
+                            ],
+
+                        "F0":
+                            features[
+                                "f0_hz"
+                            ],
+
+                        "F1":
+                            features[
+                                "f1_hz"
+                            ],
+
+                        "F2":
+                            features[
+                                "f2_hz"
+                            ],
+
+                        "F3":
+                            features[
+                                "f3_hz"
+                            ],
+
+                        "HNR":
+                            features[
+                                "hnr_db"
+                            ],
+
+                        "Centroid":
+                            features[
+                                "spectral_centroid_hz"
+                            ],
+
+                        "Tilt":
+                            features[
+                                "spectral_tilt"
+                            ],
+
+                        "80_500":
+                            features[
+                                "band_80_500_pct"
+                            ],
+
+                        "500_1500":
+                            features[
+                                "band_500_1500_pct"
+                            ],
+
+                        "1500_3000":
+                            features[
+                                "band_1500_3000_pct"
+                            ],
+
+                        "3000_5000":
+                            features[
+                                "band_3000_5000_pct"
+                            ],
+                    }
+
+
+                    st.session_state.history.append(
+                        history_row
+                    )
+
+
+                    st.session_state.result = (
+                        result
+                    )
+
+
+                    st.session_state.page = (
+                        "result"
+                    )
+
 
                 st.rerun()
 
@@ -2305,66 +2641,36 @@ elif st.session_state.page == "review":
 
 elif st.session_state.page == "result":
 
-    idx = (
-        st.session_state.test_index
+    result = (
+        st.session_state.result
     )
+
 
     target = (
-        st.session_state.sequence[
-            idx
+        result[
+            "target"
         ]
-    )
-
-    prediction = (
-        st.session_state.current_prediction
-    )
-
-    distances = (
-        st.session_state.current_distances
-    )
-
-    features = (
-        st.session_state.current_features
-    )
-
-
-    correct = (
-        prediction
-        ==
-        target
-    )
-
-
-    css = (
-        "result-ok"
-        if correct
-        else
-        "result-no"
-    )
-
-
-    status = (
-        "✅ 일치"
-        if correct
-        else
-        "❌ 불일치"
     )
 
 
     st.markdown(
         f"""
-<div class="{css}">
+<div class="{result['css']}">
 
-<div class="result-title">
-{status}
+<div style="font-size:.82rem;font-weight:750;">
+분석 결과
 </div>
 
 <div class="result-big">
-모델 예측 · {prediction}
+{result['status']}
 </div>
 
 <div>
-실제 발성 목표 · <b>{target}</b>
+{result['message']}
+</div>
+
+<div class="small" style="margin-top:7px;">
+판정 신뢰도 · <b>{result['confidence']}</b>
 </div>
 
 </div>
@@ -2374,27 +2680,81 @@ elif st.session_state.page == "result":
 
 
     st.markdown(
-        "#### 모델이 가까이 본 순서"
+        "#### 4개 공명 상대 유사도"
     )
 
 
-    for rank, (
+    ordered_similarity = sorted(
+        result[
+            "similarity"
+        ].items(),
+        key=lambda x: x[1],
+        reverse=True
+    )
+
+
+    for (
         name,
-        distance
-    ) in enumerate(
-        distances[:3],
-        start=1
+        value
+    ) in ordered_similarity:
+
+        icon = INFO[
+            name
+        ][
+            "icon"
+        ]
+
+
+        st.markdown(
+            f"""
+<div class="bar-row">
+
+<div class="bar-label">
+
+<span>
+{icon} {name}
+</span>
+
+<span>
+{value:.0f}
+</span>
+
+</div>
+
+<div class="bar-bg">
+
+<div
+class="bar-fill"
+style="width:{min(max(value, 0), 100):.1f}%">
+</div>
+
+</div>
+
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+
+
+    if (
+        result[
+            "prediction"
+        ]
+        !=
+        target
     ):
 
         st.markdown(
             f"""
-<div class="mini">
+<div class="tip">
 
-<b>{rank}위 · {name}</b><br>
+<b>
+다음 발성
+</b>
 
-<span style="color:#777;font-size:.85rem">
-모델 거리 {distance:.2f}
-</span>
+<br>
+
+{INFO[target]['tip']}
 
 </div>
 """,
@@ -2403,264 +2763,96 @@ elif st.session_state.page == "result":
 
 
     st.caption(
-        "이번 분류에도 F0(음높이)는 사용하지 않습니다."
+        "위 숫자는 공명이 존재할 확률이 아니라 "
+        "현재 4개 기준 패턴 사이의 상대적 유사도를 "
+        "보기 쉽게 환산한 값입니다."
     )
 
 
-    button_text = (
-        "다음 테스트 ➡️"
-        if idx < 9
-        else
-        "최종 결과 보기"
+    if result[
+        "out_of_reference"
+    ]:
+
+        st.warning(
+            "현재 모델은 남성 연구용 1차 기준 데이터로 만든 베타입니다. "
+            "기준 범위를 크게 벗어난 음성은 억지로 정답을 내지 않고 "
+            "판정을 보류합니다."
+        )
+
+
+    col1, col2 = st.columns(
+        2
     )
 
 
-    if st.button(
-        button_text,
-        type="primary",
-        use_container_width=True
-    ):
+    with col1:
 
-        row = {
+        if st.button(
+            "🔄 같은 공명 다시",
+            use_container_width=True
+        ):
 
-            "test":
-                idx + 1,
-
-            "target":
-                target,
-
-            "prediction":
-                prediction,
-
-            "correct":
-                correct,
-
-            **features,
-
-            "model_first":
-                distances[0][0],
-
-            "model_distance_1":
-                distances[0][1],
-
-            "model_second":
-                distances[1][0],
-
-            "model_distance_2":
-                distances[1][1],
-        }
-
-
-        st.session_state.results.append(
-            row
-        )
-
-
-        st.session_state.audio_bytes = (
-            None
-        )
-
-        st.session_state.current_features = (
-            None
-        )
-
-        st.session_state.current_prediction = (
-            None
-        )
-
-        st.session_state.current_distances = (
-            None
-        )
-
-        st.session_state.recorder_id += (
-            1
-        )
-
-
-        if idx >= 9:
-
-            st.session_state.page = (
-                "complete"
-            )
-
-        else:
-
-            st.session_state.test_index += (
-                1
-            )
-
-            st.session_state.page = (
-                "record"
+            reset_measurement(
+                keep_target=True
             )
 
 
-        st.rerun()
+            st.rerun()
+
+
+    with col2:
+
+        if st.button(
+            "다른 공명 선택",
+            type="primary",
+            use_container_width=True
+        ):
+
+            reset_measurement(
+                keep_target=False
+            )
+
+
+            st.rerun()
 
 
 # =========================================================
-# COMPLETE
+# RESEARCH LOG
 # =========================================================
 
-elif st.session_state.page == "complete":
+if st.session_state.history:
 
-    df = pd.DataFrame(
-        st.session_state.results
-    )
-
-
-    correct_count = int(
-        df[
-            "correct"
-        ].sum()
-    )
-
-
-    accuracy = (
-        correct_count
-        /
-        len(df)
-        *
-        100
-        if len(df)
-        else
-        0
-    )
-
-
-    st.markdown(
-        f"""
-<div class="done">
-
-<div style="font-size:1.2rem;font-weight:850">
-검증 완료
-</div>
-
-<div style="font-size:2.1rem;font-weight:900;margin:5px 0">
-{correct_count} / 10
-</div>
-
-<div>
-정확도 <b>{accuracy:.0f}%</b>
-</div>
-
-</div>
-""",
-        unsafe_allow_html=True,
-    )
-
-
-    summary = (
-        df.groupby(
-            "target"
-        )[
-            "correct"
-        ]
-        .agg(
-            [
-                "sum",
-                "count"
-            ]
-        )
-        .reset_index()
-    )
-
-
-    summary[
-        "accuracy_pct"
-    ] = (
-        summary[
-            "sum"
-        ]
-        /
-        summary[
-            "count"
-        ]
-        *
-        100
-    )
-
-
-    summary.columns = [
-        "공명",
-        "정답 수",
-        "테스트 수",
-        "정확도(%)",
-    ]
-
-
-    st.subheader(
-        "공명별 결과"
-    )
-
-
-    st.dataframe(
-        summary,
-        use_container_width=True,
-        hide_index=True
-    )
-
-
-    display_df = df[
-        [
-            "test",
-            "target",
-            "prediction",
-            "correct",
-        ]
-    ].copy()
-
-
-    display_df.columns = [
-        "회차",
-        "목표",
-        "모델 예측",
-        "일치",
-    ]
-
-
-    st.subheader(
-        "10회 상세 결과"
-    )
-
-
-    st.dataframe(
-        display_df,
-        use_container_width=True,
-        hide_index=True
-    )
-
-
-    csv_bytes = (
-        df.to_csv(
-            index=False
-        )
-        .encode(
-            "utf-8-sig"
-        )
-    )
-
-
-    st.download_button(
-        "📥 검증 결과 CSV 다운로드",
-        data=csv_bytes,
-        file_name="male_resonance_blind_test_v2.csv",
-        mime="text/csv",
-        type="primary",
-        use_container_width=True
-    )
-
-
-    st.caption(
-        "CSV를 이 대화에 올려주세요. "
-        "입천장 보정 후 실제 독립 테스트 정확도를 다시 확인합니다."
-    )
-
-
-    if st.button(
-        "10회 다시 테스트",
-        use_container_width=True
+    with st.expander(
+        "연구용 측정 기록"
     ):
 
-        reset_test()
+        history_df = pd.DataFrame(
+            st.session_state.history
+        )
 
-        st.rerun()
+
+        st.dataframe(
+            history_df,
+            use_container_width=True,
+            hide_index=True
+        )
+
+
+        csv_bytes = (
+            history_df
+            .to_csv(
+                index=False
+            )
+            .encode(
+                "utf-8-sig"
+            )
+        )
+
+
+        st.download_button(
+            "측정 기록 CSV 다운로드",
+            data=csv_bytes,
+            file_name="male_student_resonance_results.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
