@@ -1,8 +1,7 @@
 streamlit
-librosa
 numpy
-pandas
-requests
+librosa
 praat-parselmouth
 plotly
 audio-recorder-streamlit
+soundfile
