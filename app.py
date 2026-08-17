@@ -3,10 +3,10 @@ import librosa
 import numpy as np
 import plotly.graph_objects as go
 import parselmouth
-from audio_recorder_streamlit import audio_recorder
 import streamlit.components.v1 as components
+import base64
 
-# 1. 페이지 기본 설정 및 스타일
+# 1. 페이지 기본 설정 및 디자인
 st.set_page_config(page_title="연기 발성 5대 공명 진단 시스템", page_icon="🎙️", layout="centered")
 
 st.markdown("""
@@ -53,92 +53,113 @@ if st.session_state.step == 1:
         st.rerun()
 
 # ==========================================
-# PAGE 2: 실시간 녹음 및 남은 시간 카운트다운
+# PAGE 2: 5초 자동 종료 카운트다운 녹음
 # ==========================================
 elif st.session_state.step == 2:
-    st.markdown('<div class="step-header">STEP 2. 발성 녹음 진행</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-header">STEP 2. 발성 녹음 진행 (5초 자동 녹음)</div>', unsafe_allow_html=True)
     
     st.markdown("""
         <div class="guide-card">
             <b>📌 정확한 분석을 위한 3가지 수칙</b><br><br>
             1. <b>마이크 거리:</b> 스마트폰/마이크를 입에서 <b>주먹 하나 거리(약 15cm)</b> 띄우세요.<br>
             2. <b>발성 방법:</b> 가장 편안한 톤으로 <b>"에---"</b> 소리를 끊기지 않게 일정하게 내세요.<br>
-            3. <b>녹음 시간:</b> 아래 남은 시간이 <b>0초가 될 때까지 5초간 발성을 유지</b>해 주세요.
+            3. <b>녹음 자동 종료:</b> 버튼을 누르면 <b>5초 카운트다운 후 자동으로 중지</b>됩니다.
         </div>
     """, unsafe_allow_html=True)
 
-    st.subheader("🎙️ 실시간 음성 녹음")
-    st.caption("마이크를 누르면 녹음 상태(노란색) 변화를 감지하여 5초 남은 시간이 동작합니다.")
+    st.subheader("🎙️ 5초 자동 카운트다운 녹음")
+    st.caption("아래 빨간색 버튼을 누르면 5초 카운트다운이 시작되며 5초 후 자동으로 멈춥니다.")
 
-    # 마이크 위젯 (녹음 유지 5초)
-    recorded_audio = audio_recorder(
-        text="마이크를 눌러 녹음 시작 / 중지",
-        recording_color="#e8b62c",
-        neutral_color="#1F77B4",
-        icon_name="microphone",
-        icon_size="4x",
-        pause_threshold=5.0,
-    )
-
-    # 마이크 상태를 감지해서 실시간 타이머를 출력하는 프론트엔드 주입
-    timer_script = """
-    <div id="recording-timer" style="
-        font-size: 26px; 
-        font-weight: bold; 
-        color: #E74C3C; 
-        text-align: center; 
-        margin-top: 10px;
-        min-height: 40px;
-    "></div>
+    # 5초 타이머 및 자동 중지 내장 HTML/JS 엔진
+    custom_recorder_code = """
+    <div style="text-align: center; padding: 15px; font-family: sans-serif;">
+        <button id="recBtn" onclick="startRec()" style="
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background-color: #E74C3C;
+            color: white;
+            border: 4px solid #C0392B;
+            font-size: 22px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
+        ">🎙️<br>녹음 시작</button>
+        
+        <div id="countdown" style="
+            font-size: 36px;
+            font-weight: 800;
+            color: #E74C3C;
+            margin-top: 15px;
+            height: 45px;
+        ">05초</div>
+    </div>
 
     <script>
-    let intervalId = null;
-    let timerContainer = document.getElementById('recording-timer');
+    let mediaRecorder;
+    let chunks = [];
 
-    function checkMicState() {
-        // 부모 창의 audio_recorder 아이콘 상태 모니터링
-        const parentDoc = window.parent.document;
-        const micIcon = parentDoc.querySelector('svg[data-icon="microphone"]');
+    async function startRec() {
+        const btn = document.getElementById('recBtn');
+        const countDiv = document.getElementById('countdown');
         
-        if (micIcon) {
-            const isRecording = micIcon.style.fill === 'rgb(232, 182, 44)' || micIcon.getAttribute('fill') === '#e8b62c';
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            chunks = [];
+
+            mediaRecorder.ondataavailable = e => chunks.push(e.data);
             
-            if (isRecording && !intervalId) {
-                let timeLeft = 5;
-                timerContainer.innerHTML = "🔴 녹음 중... 남은 시간: " + timeLeft + "초";
-                
-                intervalId = setInterval(() => {
-                    timeLeft--;
-                    if (timeLeft >= 0) {
-                        timerContainer.innerHTML = "🔴 녹음 중... 남은 시간: " + timeLeft + "초";
-                    } else {
-                        timerContainer.innerHTML = "✅ 5초 녹음 완료!";
-                        timerContainer.style.color = "#27AE60";
-                        clearInterval(intervalId);
-                    }
-                }, 1000);
-            } else if (!isRecording && intervalId) {
-                clearInterval(intervalId);
-                intervalId = null;
-            }
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(chunks, { type: 'audio/wav' });
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const base64data = reader.result.split(',')[1];
+                    window.parent.postMessage({ type: 'streamlit:setComponentValue', value: base64data }, '*');
+                };
+                reader.readAsDataURL(blob);
+                stream.getTracks().forEach(track => track.stop());
+            };
+
+            mediaRecorder.start();
+            btn.disabled = true;
+            btn.style.backgroundColor = '#7F8C8D';
+            btn.style.borderColor = '#95A5A6';
+            btn.innerHTML = "🎙️<br>녹음 중";
+
+            let leftTime = 5;
+            countDiv.innerText = "05초";
+
+            let timer = setInterval(() => {
+                leftTime--;
+                if (leftTime > 0) {
+                    countDiv.innerText = "0" + leftTime + "초";
+                } else {
+                    clearInterval(timer);
+                    countDiv.innerText = "✅ 녹음 완료!";
+                    countDiv.style.color = "#27AE60";
+                    btn.innerHTML = "✅<br>완료";
+                    mediaRecorder.stop();
+                }
+            }, 1000);
+
+        } catch (err) {
+            alert("마이크 권한을 허용해 주세요.");
         }
     }
-
-    setInterval(checkMicState, 300);
     </script>
     """
-    components.html(timer_script, height=60)
 
-    if recorded_audio:
-        st.session_state.audio_bytes = recorded_audio
+    # 컴포넌트 호출 및 값 수신
+    rec_val = components.html(custom_recorder_code, height=230)
 
-    # 녹음 완료 시 플레이어 및 버튼 노출
+    if rec_val:
+        st.session_state.audio_bytes = base64.b64decode(rec_val)
+
     if st.session_state.audio_bytes is not None:
-        st.write("")
-        st.success("✅ 녹음이 성공적으로 완료되었습니다! 미리 들어보시고 분석을 진행해 주세요.")
+        st.success("✅ 5초 녹음이 정상 수신되었습니다! 들어보신 후 분석을 진행하세요.")
         st.audio(st.session_state.audio_bytes, format="audio/wav")
         
-        st.write("")
         col1, col2 = st.columns(2)
         with col1:
             if st.button("🔄 다시 녹음하기", use_container_width=True):
