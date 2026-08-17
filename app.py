@@ -3,6 +3,8 @@ import librosa
 import numpy as np
 import plotly.graph_objects as go
 import parselmouth
+import streamlit.components.v1 as components
+import base64
 
 # 1. 페이지 기본 설정 및 디자인
 st.set_page_config(page_title="연기 발성 5대 공명 진단 시스템", page_icon="🎙️", layout="centered")
@@ -13,11 +15,6 @@ st.markdown("""
     .sub-title { font-size: 0.95rem; color: #666666; text-align: center; margin-bottom: 25px; }
     .guide-card { background-color: #F0F4F8; padding: 20px; border-radius: 12px; border-left: 6px solid #1F77B4; margin-bottom: 20px; }
     .step-header { font-size: 1.2rem; font-weight: 600; color: #0F4C81; margin-bottom: 10px; }
-    div[data-testid="stAudioInput"] {
-        border: 2px solid #1F77B4;
-        border-radius: 12px;
-        padding: 8px;
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -56,34 +53,123 @@ if st.session_state.step == 1:
         st.rerun()
 
 # ==========================================
-# PAGE 2: 실시간 파형 녹음 및 하단 제어
+# PAGE 2: 교수님 선호 원형 버튼 + 5초 카운트다운 녹음
 # ==========================================
 elif st.session_state.step == 2:
-    st.markdown('<div class="step-header">STEP 2. 발성 녹음 진행</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-header">STEP 2. 발성 녹음 진행 (5초 자동 카운트다운)</div>', unsafe_allow_html=True)
     
     st.markdown("""
         <div class="guide-card">
             <b>📌 정확한 분석을 위한 3가지 수칙</b><br><br>
             1. <b>마이크 거리:</b> 스마트폰/마이크를 입에서 <b>주먹 하나 거리(약 15cm)</b> 띄우세요.<br>
             2. <b>발성 방법:</b> 가장 편안한 톤으로 <b>"에---"</b> 소리를 끊기지 않게 일정하게 내세요.<br>
-            3. <b>녹음 시간:</b> 마이크를 누르고 <b>5초간 발성</b>을 유지한 뒤 녹음을 중지하세요.
+            3. <b>녹음 시간:</b> 버튼을 누르면 <b>5초 카운트다운 후 자동으로 녹음이 종료</b>됩니다.
         </div>
     """, unsafe_allow_html=True)
 
-    st.subheader("🎙️ 실시간 음성 녹음")
-    st.caption("아래 마이크 버튼을 클릭하여 5초간 녹음을 진행해 주세요.")
+    st.subheader("🎙️ 5초 자동 녹음")
+    st.caption("아래 빨간색 원형 버튼을 클릭하면 5초 카운트다운이 시작됩니다.")
 
-    # 100% 안정성이 보장된 Streamlit 표준 음성 수신
-    recorded_audio = st.audio_input("마이크 발성 녹음")
+    # 안정화된 원형 버튼 컴포넌트
+    custom_recorder_code = """
+    <div style="text-align: center; padding: 10px; font-family: sans-serif;">
+        <button id="recBtn" onclick="startRec()" style="
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background-color: #E74C3C;
+            color: white;
+            border: 4px solid #C0392B;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
+            transition: all 0.2s ease;
+        ">🎙️<br>녹음 시작</button>
+        
+        <div id="countdown" style="
+            font-size: 34px;
+            font-weight: 800;
+            color: #E74C3C;
+            margin-top: 15px;
+            height: 45px;
+        ">05초</div>
+    </div>
 
-    if recorded_audio is not None:
-        st.session_state.audio_bytes = recorded_audio.read()
+    <script>
+    let mediaRecorder;
+    let chunks = [];
 
-    # 데이터 수신 즉시 예외 없이 버튼 표출
+    async function startRec() {
+        const btn = document.getElementById('recBtn');
+        const countDiv = document.getElementById('countdown');
+        
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            chunks = [];
+
+            mediaRecorder.ondataavailable = e => {
+                if (e.data.size > 0) chunks.push(e.data);
+            };
+            
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(chunks);
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    // 순수 Base64 데이터 스트림 전송
+                    const base64String = reader.result.split(',')[1];
+                    window.parent.postMessage({ type: 'streamlit:setComponentValue', value: base64String }, '*');
+                };
+                reader.readAsDataURL(blob);
+                stream.getTracks().forEach(track => track.stop());
+            };
+
+            mediaRecorder.start();
+            btn.disabled = true;
+            btn.style.backgroundColor = '#7F8C8D';
+            btn.style.borderColor = '#95A5A6';
+            btn.innerHTML = "🎙️<br>녹음 중";
+
+            let leftTime = 5;
+            countDiv.innerText = "05초";
+
+            let timer = setInterval(() => {
+                leftTime--;
+                if (leftTime > 0) {
+                    countDiv.innerText = "0" + leftTime + "초";
+                } else {
+                    clearInterval(timer);
+                    countDiv.innerText = "✅ 녹음 완료!";
+                    countDiv.style.color = "#27AE60";
+                    btn.innerHTML = "✅<br>완료";
+                    mediaRecorder.stop();
+                }
+            }, 1000);
+
+        } catch (err) {
+            alert("마이크 권한을 허용해 주세요.");
+        }
+    }
+    </script>
+    """
+
+    rec_val = components.html(custom_recorder_code, height=230)
+
+    # 파이썬 데이터 바인딩 보장 처리
+    if rec_val and isinstance(rec_val, str):
+        try:
+            st.session_state.audio_bytes = base64.b64decode(rec_val)
+        except Exception:
+            pass
+
+    # 데이터 수신 시 100% 결과 및 버튼들 노출
     if st.session_state.audio_bytes is not None:
         st.write("")
-        st.success("✅ 녹음이 완료되었습니다! 오디오를 들어보시고 분석을 진행하세요.")
+        st.success("✅ 5초 녹음이 정상적으로 완료되었습니다! 들어보신 후 진행하세요.")
+        st.audio(st.session_state.audio_bytes)
         
+        st.write("")
         col1, col2 = st.columns(2)
         with col1:
             if st.button("🔄 다시 녹음하기", use_container_width=True):
@@ -122,7 +208,6 @@ elif st.session_state.step == 3:
 
         shift = 1.18 if is_female else 1.0
 
-        # 5대 공명 구간 (Hz)
         chest_e = np.mean(mean_spectrum[(freqs >= 80) & (freqs <= 450 * shift)])
         palate_e = np.mean(mean_spectrum[(freqs > 450 * shift) & (freqs <= 1200 * shift)])
         teeth_e = np.mean(mean_spectrum[(freqs > 1200 * shift) & (freqs <= 2400 * shift)])
