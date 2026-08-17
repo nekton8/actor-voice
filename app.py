@@ -1,5 +1,6 @@
 import base64
 import tempfile
+from datetime import datetime
 
 import librosa
 import numpy as np
@@ -10,18 +11,22 @@ from parselmouth.praat import call
 
 
 st.set_page_config(
-    page_title="남성 공명 훈련 베타",
+    page_title="공명 훈련 피드백",
     page_icon="🎙️",
     layout="centered",
 )
 
+
+# =========================================================
+# STYLE
+# =========================================================
 
 st.markdown(
     """
 <style>
 .block-container {
     max-width: 720px;
-    padding-top: 0.6rem;
+    padding-top: 0.55rem;
     padding-bottom: 1.2rem;
 }
 .main-title {
@@ -35,124 +40,210 @@ st.markdown(
     color: #666;
     font-size: 0.88rem;
     line-height: 1.45;
-    margin-bottom: 0.7rem;
+    margin-bottom: 0.75rem;
 }
 .beta {
-    display:inline-block;
-    font-size:0.72rem;
-    font-weight:800;
-    padding:3px 7px;
-    border-radius:999px;
-    background:#eef4ff;
-    color:#365f9d;
-    margin-bottom:8px;
+    display: inline-block;
+    font-size: 0.71rem;
+    font-weight: 800;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: #eef4ff;
+    color: #365f9d;
+    margin-bottom: 8px;
 }
 .card {
-    border:1px solid #e2e5e8;
-    border-radius:14px;
-    padding:13px 14px;
-    margin-bottom:8px;
-    background:#fafbfc;
+    border: 1px solid #e2e5e8;
+    border-radius: 14px;
+    padding: 13px 14px;
+    margin-bottom: 8px;
+    background: #fafbfc;
+}
+.icon-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 66px;
+    margin-bottom: 4px;
+}
+.choice-label {
+    text-align: center;
+    font-size: 0.82rem;
+    color: #6f747b;
+    margin-top: -2px;
+    margin-bottom: 6px;
+}
+.target-head {
+    display: flex;
+    gap: 12px;
+    align-items: center;
 }
 .target-title {
-    font-size:1.45rem;
-    font-weight:850;
+    font-size: 1.38rem;
+    font-weight: 850;
+}
+.syllable {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #3b4d6b;
 }
 .guide {
-    background:#f5f6f8;
-    border-radius:13px;
-    padding:10px 12px;
-    font-size:0.86rem;
-    line-height:1.45;
-    margin-bottom:8px;
+    background: #f5f6f8;
+    border-radius: 13px;
+    padding: 10px 12px;
+    font-size: 0.86rem;
+    line-height: 1.5;
+    margin-bottom: 8px;
 }
 .result-good {
-    background:#eaf7ef;
-    border:1px solid #b8e1c6;
-    border-radius:15px;
-    padding:16px;
-    margin:8px 0 12px;
+    background: #eaf7ef;
+    border: 1px solid #b8e1c6;
+    border-radius: 15px;
+    padding: 16px;
+    margin: 8px 0 12px;
 }
 .result-mid {
-    background:#fff8e8;
-    border:1px solid #ead7a7;
-    border-radius:15px;
-    padding:16px;
-    margin:8px 0 12px;
+    background: #fff8e8;
+    border: 1px solid #ead7a7;
+    border-radius: 15px;
+    padding: 16px;
+    margin: 8px 0 12px;
 }
 .result-bad {
-    background:#fff0f0;
-    border:1px solid #efc0c0;
-    border-radius:15px;
-    padding:16px;
-    margin:8px 0 12px;
-}
-.result-hold {
-    background:#f2f3f5;
-    border:1px solid #d4d7db;
-    border-radius:15px;
-    padding:16px;
-    margin:8px 0 12px;
+    background: #fff0f0;
+    border: 1px solid #efc0c0;
+    border-radius: 15px;
+    padding: 16px;
+    margin: 8px 0 12px;
 }
 .result-big {
-    font-size:1.65rem;
-    font-weight:900;
-    margin:4px 0;
+    font-size: 1.62rem;
+    font-weight: 900;
+    margin: 4px 0;
 }
 .small {
-    color:#6d7278;
-    font-size:0.82rem;
-    line-height:1.4;
+    color: #6d7278;
+    font-size: 0.82rem;
+    line-height: 1.45;
+}
+.score-box {
+    text-align: center;
+    border: 1px solid #e1e4e8;
+    border-radius: 14px;
+    padding: 12px 8px;
+    background: #fff;
+    margin-bottom: 9px;
+}
+.score-label {
+    color: #777;
+    font-size: 0.77rem;
+    font-weight: 700;
+}
+.score-value {
+    font-size: 2rem;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-top: 3px;
+}
+.score-delta-up {
+    color: #237a43;
+}
+.score-delta-down {
+    color: #b34040;
+}
+.score-delta-flat {
+    color: #69717a;
 }
 .bar-row {
-    margin:8px 0 11px;
+    margin: 8px 0 11px;
 }
 .bar-label {
-    display:flex;
-    justify-content:space-between;
-    font-size:0.87rem;
-    font-weight:700;
-    margin-bottom:3px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.87rem;
+    font-weight: 700;
+    margin-bottom: 3px;
 }
 .bar-bg {
-    height:10px;
-    background:#eceff2;
-    border-radius:999px;
-    overflow:hidden;
+    height: 10px;
+    background: #eceff2;
+    border-radius: 999px;
+    overflow: hidden;
 }
 .bar-fill {
-    height:100%;
-    background:#5b6f91;
-    border-radius:999px;
+    height: 100%;
+    background: #657693;
+    border-radius: 999px;
 }
 .tip {
-    background:#f7f8fa;
-    border-radius:12px;
-    padding:11px 12px;
-    font-size:0.87rem;
-    line-height:1.45;
-    margin-top:8px;
+    background: #f7f8fa;
+    border-radius: 12px;
+    padding: 11px 12px;
+    font-size: 0.87rem;
+    line-height: 1.48;
+    margin-top: 8px;
 }
+.diary-card {
+    border: 1px solid #e3e6ea;
+    border-radius: 13px;
+    padding: 11px 12px;
+    margin: 7px 0;
+    background: #fbfcfd;
+}
+.diary-title {
+    font-weight: 850;
+    font-size: 0.94rem;
+}
+.diary-meta {
+    color: #6f747b;
+    font-size: 0.78rem;
+    margin-top: 3px;
+}
+.trend-box {
+    background: #f3f6fb;
+    border-radius: 13px;
+    padding: 11px 12px;
+    margin: 8px 0 10px;
+    font-size: 0.86rem;
+    line-height: 1.48;
+}
+
 @media(max-width:600px) {
     .block-container {
-        padding-top:0.45rem;
-        padding-left:0.8rem;
-        padding-right:0.8rem;
-        padding-bottom:1rem;
+        padding-top: 0.4rem;
+        padding-left: 0.78rem;
+        padding-right: 0.78rem;
+        padding-bottom: 1rem;
     }
-    .main-title { font-size:1.45rem; }
-    .sub-title { font-size:0.82rem; }
-    .card { padding:10px 11px; }
-    .target-title { font-size:1.28rem; }
-    .guide { padding:9px 10px; font-size:0.81rem; }
+    .main-title {
+        font-size: 1.45rem;
+    }
+    .sub-title {
+        font-size: 0.82rem;
+    }
+    .card {
+        padding: 10px 11px;
+    }
+    .target-title {
+        font-size: 1.25rem;
+    }
+    .guide {
+        padding: 9px 10px;
+        font-size: 0.81rem;
+    }
     .result-good,
     .result-mid,
-    .result-bad,
-    .result-hold {
-        padding:13px;
+    .result-bad {
+        padding: 13px;
+    }
+    .score-value {
+        font-size: 1.8rem;
     }
     button {
-        min-height:42px !important;
+        min-height: 42px !important;
     }
 }
 </style>
@@ -160,6 +251,10 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+
+# =========================================================
+# TRAINING CONFIG
+# =========================================================
 
 RESONANCES = [
     "가슴",
@@ -171,56 +266,28 @@ RESONANCES = [
 
 INFO = {
     "가슴": {
-        "icon": "🫁",
-        "guide": (
-            "다른 공명은 최대한 배제하고 "
-            "가슴 쪽 울림을 분명하게 만들어 /아/를 발성하세요."
-        ),
-        "tip": (
-            "가슴 쪽 울림이 더 분명하게 느껴지도록 "
-            "다시 발성해보세요."
-        ),
+        "syllable": "하—",
+        "guide": "가슴 쪽 울림을 분명하게 느끼며 ‘하—’를 길게 발성하세요.",
+        "tip": "목에 힘을 주기보다 가슴 앞쪽이 울리는 감각을 유지하며 ‘하—’를 다시 길게 발성해보세요.",
     },
-
     "입천장": {
-        "icon": "👄",
-        "guide": (
-            "다른 공명은 최대한 배제하고 "
-            "입천장·구강 공간의 울림을 분명하게 만들어 /아/를 발성하세요."
-        ),
-        "tip": (
-            "입천장과 구강 공간에 울림이 모이는 감각을 "
-            "다시 확인해보세요."
-        ),
+        "syllable": "허—",
+        "guide": "입천장과 구강 위쪽의 울림을 분명하게 느끼며 ‘허—’를 길게 발성하세요.",
+        "tip": "소리가 입 안에서 납작해지지 않도록 입천장 위쪽 공간을 느끼며 ‘허—’를 다시 발성해보세요.",
     },
-
     "이빨·전방": {
-        "icon": "🦷",
-        "guide": (
-            "다른 공명은 최대한 배제하고 "
-            "윗니와 입 앞쪽에 소리가 모이도록 /아/를 발성하세요."
-        ),
-        "tip": (
-            "소리가 윗니와 입 앞쪽으로 더 선명하게 모이도록 "
-            "다시 발성해보세요."
-        ),
+        "syllable": "히—",
+        "guide": "윗니와 입 앞쪽에 소리가 모이는 감각을 느끼며 ‘히—’를 길게 발성하세요.",
+        "tip": "소리가 뒤로 빠지지 않도록 윗니와 입 앞쪽에 초점을 두고 ‘히—’를 다시 발성해보세요.",
     },
-
     "비강": {
-        "icon": "👃",
-        "guide": (
-            "다른 공명은 최대한 배제하고 "
-            "코 주변과 얼굴 중앙의 울림을 분명하게 만들어 /아/를 발성하세요."
-        ),
-        "tip": (
-            "코 주변과 얼굴 중앙의 울림이 더 분명한지 확인하며 "
-            "다시 발성해보세요."
-        ),
+        "syllable": "미—",
+        "guide": "코 주변과 얼굴 중앙의 울림을 분명하게 느끼며 ‘미—’를 길게 발성하세요.",
+        "tip": "콧소리를 억지로 만들기보다 코 주변과 얼굴 중앙의 진동을 느끼며 ‘미—’를 다시 발성해보세요.",
     },
 }
 
 
-# F0는 측정하지만 분류에는 사용하지 않음
 FEATURES = [
     "f1_hz",
     "f2_hz",
@@ -236,12 +303,10 @@ FEATURES = [
 
 
 # =========================================================
-# 4공명 기준 모델
-# 두개골 완전 제외
+# MODEL
 # =========================================================
 
 CENTROIDS = {
-
     "가슴": {
         "f1_hz": 449.81686886925206,
         "f2_hz": 1038.30057387432,
@@ -296,7 +361,6 @@ CENTROIDS = {
 }
 
 
-# 각 공명 반복 측정에서 실제로 나타난 변동폭
 POOLED_STD = {
     "f1_hz": 33.1148377360414,
     "f2_hz": 93.48950964018955,
@@ -312,23 +376,197 @@ POOLED_STD = {
 
 
 # =========================================================
+# BODY AREA ICONS
+# =========================================================
+
+def icon_svg(name, size=60):
+
+    common = (
+        f'width="{size}" height="{size}" '
+        'viewBox="0 0 64 64" fill="none" '
+        'xmlns="http://www.w3.org/2000/svg"'
+    )
+
+    stroke = "#4f5e73"
+    accent = "#7387aa"
+
+    if name == "가슴":
+
+        return f"""
+        <svg {common}>
+          <path
+            d="M22 10c2 5 5 7 10 7s8-2 10-7"
+            stroke="{stroke}"
+            stroke-width="2.4"
+            stroke-linecap="round"
+          />
+          <path
+            d="M18 16c-4 6-6 14-5 23l2 13h34l2-13c1-9-1-17-5-23"
+            stroke="{stroke}"
+            stroke-width="2.4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M22 24c3-3 6-4 10-4s7 1 10 4"
+            stroke="{accent}"
+            stroke-width="4"
+            stroke-linecap="round"
+          />
+          <path
+            d="M24 31h16"
+            stroke="{accent}"
+            stroke-width="4"
+            stroke-linecap="round"
+          />
+        </svg>
+        """
+
+    if name == "입천장":
+
+        return f"""
+        <svg {common}>
+          <path
+            d="M13 34c7-11 17-17 30-17 4 0 7 1 9 2"
+            stroke="{stroke}"
+            stroke-width="2.4"
+            stroke-linecap="round"
+          />
+          <path
+            d="M14 35c8 1 15 5 20 11"
+            stroke="{stroke}"
+            stroke-width="2.4"
+            stroke-linecap="round"
+          />
+          <path
+            d="M24 28c7-5 15-7 25-6"
+            stroke="{accent}"
+            stroke-width="4"
+            stroke-linecap="round"
+          />
+          <path
+            d="M49 22c2 3 3 6 3 10"
+            stroke="{stroke}"
+            stroke-width="2.4"
+            stroke-linecap="round"
+          />
+        </svg>
+        """
+
+    if name == "이빨·전방":
+
+        return f"""
+        <svg {common}>
+          <path
+            d="M15 24c5-5 11-7 17-7s12 2 17 7"
+            stroke="{stroke}"
+            stroke-width="2.4"
+            stroke-linecap="round"
+          />
+          <path
+            d="M15 40c5 5 11 7 17 7s12-2 17-7"
+            stroke="{stroke}"
+            stroke-width="2.4"
+            stroke-linecap="round"
+          />
+          <path
+            d="M18 29h28"
+            stroke="{accent}"
+            stroke-width="4"
+            stroke-linecap="round"
+          />
+          <path
+            d="M22 29v6M27 29v6M32 29v6M37 29v6M42 29v6"
+            stroke="{stroke}"
+            stroke-width="1.8"
+          />
+          <path
+            d="M19 36h26"
+            stroke="{stroke}"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+        </svg>
+        """
+
+    if name == "비강":
+
+        return f"""
+        <svg {common}>
+          <path
+            d="M24 12c10 1 18 8 20 18 1 6-1 10-5 13-3 2-4 5-4 9"
+            stroke="{stroke}"
+            stroke-width="2.4"
+            stroke-linecap="round"
+          />
+          <path
+            d="M27 22c7 1 11 4 13 9"
+            stroke="{accent}"
+            stroke-width="4"
+            stroke-linecap="round"
+          />
+          <path
+            d="M40 31c-4 2-7 3-11 3"
+            stroke="{accent}"
+            stroke-width="4"
+            stroke-linecap="round"
+          />
+          <path
+            d="M24 12c-5 5-7 11-7 18 0 8 3 14 9 19"
+            stroke="{stroke}"
+            stroke-width="2.4"
+            stroke-linecap="round"
+          />
+        </svg>
+        """
+
+    return ""
+
+
+# =========================================================
 # SESSION
 # =========================================================
 
-defaults = {
-    "page": "select",
-    "target": None,
-    "audio_bytes": None,
-    "recorder_id": 0,
-    "result": None,
-    "history": [],
-}
+def init_state():
+
+    defaults = {
+        "page": "select",
+        "target": None,
+        "audio_bytes": None,
+        "recorder_id": 0,
+        "result": None,
+        "history": [],
+    }
+
+    for key, value in defaults.items():
+
+        if key not in st.session_state:
+
+            st.session_state[key] = value
 
 
-for key, value in defaults.items():
+    # 이전 앱의 두개골 값 등이 남아 있어도 자동 복구
 
-    if key not in st.session_state:
-        st.session_state[key] = value
+    if st.session_state.target not in RESONANCES:
+
+        st.session_state.target = None
+
+        if st.session_state.page != "select":
+
+            st.session_state.page = "select"
+
+
+    if st.session_state.page not in {
+        "select",
+        "record",
+        "review",
+        "result",
+    }:
+
+        st.session_state.page = "select"
+
+
+init_state()
 
 
 # =========================================================
@@ -647,8 +885,7 @@ export default function(component) {
 
         for (const part of parts) {
 
-            total +=
-                part.length;
+            total += part.length;
         }
 
 
@@ -668,8 +905,7 @@ export default function(component) {
                 offset
             );
 
-            offset +=
-                part.length;
+            offset += part.length;
         }
 
 
@@ -1344,7 +1580,7 @@ export default function(component) {
 
 
 recorder_component = st.components.v2.component(
-    "student_resonance_recorder_v1",
+    "student_resonance_recorder_v2",
     html=RECORDER_HTML,
     css=RECORDER_CSS,
     js=RECORDER_JS,
@@ -1372,6 +1608,7 @@ def five_second_recorder(key):
 
 
     if not audio_b64:
+
         return None
 
 
@@ -1398,18 +1635,15 @@ def safe_float(value):
             value
         )
 
-
         if np.isfinite(
             value
         ):
 
             return value
 
-
     except Exception:
 
         pass
-
 
     return np.nan
 
@@ -1427,13 +1661,11 @@ def band_ratio(
         (frequencies < high)
     )
 
-
     total_mask = (
         (frequencies >= 80)
         &
         (frequencies < 5000)
     )
-
 
     total = (
         np.sum(
@@ -1444,7 +1676,6 @@ def band_ratio(
         +
         1e-12
     )
-
 
     return float(
         np.sum(
@@ -1470,16 +1701,13 @@ def spectral_tilt(
         (frequencies <= 5000)
     )
 
-
     freq = frequencies[
         mask
     ]
 
-
     pwr = power[
         mask
     ]
-
 
     valid = (
         (freq > 0)
@@ -1487,26 +1715,21 @@ def spectral_tilt(
         (pwr > 0)
     )
 
-
     freq = freq[
         valid
     ]
-
 
     pwr = pwr[
         valid
     ]
 
-
     if len(freq) < 10:
 
         return np.nan
 
-
     x = np.log10(
         freq
     )
-
 
     y = (
         10
@@ -1515,7 +1738,6 @@ def spectral_tilt(
             pwr + 1e-12
         )
     )
-
 
     return float(
         np.polyfit(
@@ -1537,12 +1759,10 @@ def mean_formant(
         duration * 0.15
     )
 
-
     end = min(
         duration - 0.15,
         duration * 0.85
     )
-
 
     if end <= start:
 
@@ -1639,8 +1859,55 @@ def analyze_audio(
         if voice_duration < 2:
 
             raise ValueError(
-                "유효한 발성 시간이 너무 짧습니다. "
-                "/아/를 충분히 유지해주세요."
+                "발성 구간이 너무 짧습니다. "
+                "소리를 3초 이상 길게 유지해주세요."
+            )
+
+
+        rms = float(
+            np.sqrt(
+                np.mean(
+                    np.square(
+                        y_trim
+                    )
+                )
+            )
+            +
+            1e-12
+        )
+
+
+        rms_db = (
+            20
+            *
+            np.log10(
+                rms
+            )
+        )
+
+
+        peak = float(
+            np.max(
+                np.abs(
+                    y_trim
+                )
+            )
+        )
+
+
+        if rms_db < -48:
+
+            raise ValueError(
+                "녹음된 소리가 너무 작습니다. "
+                "휴대폰을 조금 가까이 두고 다시 녹음해주세요."
+            )
+
+
+        if peak >= 0.999:
+
+            raise ValueError(
+                "소리가 너무 크게 녹음되어 일부가 찌그러졌습니다. "
+                "조금 작게 발성해 다시 녹음해주세요."
             )
 
 
@@ -1779,6 +2046,9 @@ def analyze_audio(
             "voice_duration_sec":
                 voice_duration,
 
+            "rms_db":
+                rms_db,
+
             "f0_hz":
                 f0,
 
@@ -1865,7 +2135,8 @@ def classify(
             ):
 
                 raise ValueError(
-                    f"{key} 값을 안정적으로 측정하지 못했습니다."
+                    f"{key} 값을 안정적으로 측정하지 못했습니다. "
+                    "다시 녹음해주세요."
                 )
 
 
@@ -1933,7 +2204,7 @@ def classify(
     )
 
 
-    similarity = {
+    scores = {
         name:
             raw[
                 name
@@ -1948,14 +2219,185 @@ def classify(
 
     return (
         ordered,
-        similarity
+        scores
+    )
+
+
+def target_attempt_number(
+    target
+):
+
+    return (
+        1
+        +
+        sum(
+            1
+            for row
+            in st.session_state.history
+            if row[
+                "target"
+            ]
+            ==
+            target
+        )
+    )
+
+
+def previous_target_score(
+    target
+):
+
+    rows = [
+        row
+        for row
+        in st.session_state.history
+        if row[
+            "target"
+        ]
+        ==
+        target
+    ]
+
+
+    if not rows:
+
+        return None
+
+
+    return float(
+        rows[
+            -1
+        ][
+            "target_score"
+        ]
+    )
+
+
+def recent_target_scores(
+    target,
+    include_current=None
+):
+
+    values = [
+        float(
+            row[
+                "target_score"
+            ]
+        )
+        for row
+        in st.session_state.history
+        if row[
+            "target"
+        ]
+        ==
+        target
+    ]
+
+
+    if include_current is not None:
+
+        values.append(
+            float(
+                include_current
+            )
+        )
+
+
+    return values[
+        -3:
+    ]
+
+
+def trend_text(
+    target,
+    current_score
+):
+
+    values = recent_target_scores(
+        target,
+        include_current=current_score
+    )
+
+
+    if len(
+        values
+    ) == 1:
+
+        return (
+            "첫 기록입니다. 같은 공명을 반복해서 연습하면 "
+            "변화 추세를 확인할 수 있습니다."
+        )
+
+
+    delta = (
+        values[
+            -1
+        ]
+        -
+        values[
+            -2
+        ]
+    )
+
+
+    if len(
+        values
+    ) >= 3:
+
+        overall = (
+            values[
+                -1
+            ]
+            -
+            values[
+                0
+            ]
+        )
+
+
+        if overall >= 8:
+
+            return (
+                f"최근 {len(values)}회에서 "
+                f"{target} 공명 일치도가 "
+                "뚜렷하게 좋아지고 있습니다."
+            )
+
+
+        if overall <= -8:
+
+            return (
+                f"최근 {len(values)}회에서는 "
+                f"{target} 공명 일치도가 낮아졌습니다. "
+                "다음 발성에서 공명 위치를 다시 확인해보세요."
+            )
+
+
+    if delta >= 5:
+
+        return (
+            f"직전 {target} 연습보다 좋아졌습니다."
+        )
+
+
+    if delta <= -5:
+
+        return (
+            f"직전 {target} 연습보다 "
+            "일치도가 낮아졌습니다."
+        )
+
+
+    return (
+        f"직전 {target} 연습과 "
+        "비슷한 수준을 유지하고 있습니다."
     )
 
 
 def build_result(
     target,
     ordered,
-    similarity
+    scores
 ):
 
     prediction = (
@@ -1967,20 +2409,16 @@ def build_result(
     )
 
 
-    d1 = (
-        ordered[
-            0
-        ][
-            1
+    top_score = float(
+        scores[
+            prediction
         ]
     )
 
 
-    d2 = (
-        ordered[
-            1
-        ][
-            1
+    target_score = float(
+        scores[
+            target
         ]
     )
 
@@ -1999,53 +2437,40 @@ def build_result(
     )
 
 
-    target_distance = dict(
-        ordered
-    )[
+    second_name = (
+        ordered[
+            1
+        ][
+            0
+        ]
+    )
+
+
+    second_score = float(
+        scores[
+            second_name
+        ]
+    )
+
+
+    previous = previous_target_score(
         target
-    ]
-
-
-    margin = (
-        (
-            d2
-            -
-            d1
-        )
-        /
-        max(
-            d2,
-            1e-9
-        )
     )
 
 
-    out_of_reference = (
-        d1 > 3.0
+    delta = (
+        None
+        if previous is None
+        else
+        target_score
+        -
+        previous
     )
 
 
-    if out_of_reference:
+    if prediction == target:
 
-        status = (
-            "판정 보류"
-        )
-
-
-        css = (
-            "result-hold"
-        )
-
-
-        message = (
-            "현재 기준 데이터와 차이가 커서 "
-            "공명을 자신 있게 판정하기 어렵습니다."
-        )
-
-
-    elif prediction == target:
-
-        if margin >= 0.25:
+        if target_score >= 50:
 
             status = (
                 "잘 되고 있습니다"
@@ -2058,8 +2483,8 @@ def build_result(
 
 
             message = (
-                f"현재 발성은 {target} 공명에 "
-                "가장 뚜렷하게 가깝습니다."
+                f"현재 발성은 목표인 "
+                f"{target} 공명과 가장 잘 일치합니다."
             )
 
 
@@ -2077,7 +2502,7 @@ def build_result(
 
             message = (
                 f"{target} 공명이 가장 가깝지만 "
-                "다른 공명과의 경계가 아직 크지 않습니다."
+                "다른 공명도 함께 나타나고 있습니다."
             )
 
 
@@ -2086,13 +2511,13 @@ def build_result(
         if (
             target_rank == 2
             and
-            target_distance
-            <=
-            d1 * 1.30
+            target_score
+            >=
+            top_score - 10
         ):
 
             status = (
-                "방향은 맞습니다"
+                "목표 공명이 충분히 분명하지 않습니다"
             )
 
 
@@ -2102,16 +2527,16 @@ def build_result(
 
 
             message = (
-                f"{target} 공명도 가깝지만 "
+                f"{target} 공명도 나타나지만 "
                 f"현재는 {prediction} 공명이 "
-                "조금 더 강하게 나타납니다."
+                "조금 더 강하게 분석됩니다."
             )
 
 
         else:
 
             status = (
-                "다른 공명이 더 가깝습니다"
+                f"{prediction} 공명이 더 강합니다"
             )
 
 
@@ -2121,37 +2546,10 @@ def build_result(
 
 
             message = (
-                f"현재 발성은 목표인 {target}보다 "
-                f"{prediction} 공명에 더 가깝게 나타납니다."
+                f"목표는 {target} 공명이지만 "
+                f"현재 발성에서는 {prediction} 공명의 "
+                "특징이 더 강하게 나타납니다."
             )
-
-
-    if out_of_reference:
-
-        confidence = (
-            "낮음"
-        )
-
-
-    elif margin >= 0.35:
-
-        confidence = (
-            "높음"
-        )
-
-
-    elif margin >= 0.15:
-
-        confidence = (
-            "보통"
-        )
-
-
-    else:
-
-        confidence = (
-            "낮음"
-        )
 
 
     return {
@@ -2171,26 +2569,35 @@ def build_result(
         "message":
             message,
 
-        "confidence":
-            confidence,
+        "target_score":
+            target_score,
 
-        "target_rank":
-            target_rank,
+        "top_score":
+            top_score,
 
-        "nearest_distance":
-            d1,
+        "second_name":
+            second_name,
 
-        "margin":
-            margin,
+        "second_score":
+            second_score,
 
-        "out_of_reference":
-            out_of_reference,
-
-        "similarity":
-            similarity,
+        "scores":
+            scores,
 
         "ordered":
             ordered,
+
+        "previous_score":
+            previous,
+
+        "delta":
+            delta,
+
+        "trend_text":
+            trend_text(
+                target,
+                target_score
+            ),
     }
 
 
@@ -2217,6 +2624,8 @@ def reset_measurement(
         keep_target
         and
         st.session_state.target
+        in
+        RESONANCES
     ):
 
         st.session_state.page = (
@@ -2237,6 +2646,340 @@ def reset_measurement(
 
 
 # =========================================================
+# PRACTICE DIARY
+# =========================================================
+
+def resonance_summary(
+    target
+):
+
+    rows = [
+        row
+        for row
+        in st.session_state.history
+        if row[
+            "target"
+        ]
+        ==
+        target
+    ]
+
+
+    if not rows:
+
+        return None
+
+
+    scores = [
+        float(
+            row[
+                "target_score"
+            ]
+        )
+        for row
+        in rows
+    ]
+
+
+    latest = scores[
+        -1
+    ]
+
+
+    best = max(
+        scores
+    )
+
+
+    if len(
+        scores
+    ) == 1:
+
+        trend = (
+            "첫 기록"
+        )
+
+
+    else:
+
+        window = scores[
+            -3:
+        ]
+
+
+        change = (
+            window[
+                -1
+            ]
+            -
+            window[
+                0
+            ]
+        )
+
+
+        if change >= 8:
+
+            trend = (
+                "좋아지는 중"
+            )
+
+
+        elif change <= -8:
+
+            trend = (
+                "다시 점검 필요"
+            )
+
+
+        else:
+
+            trend = (
+                "비슷하게 유지"
+            )
+
+
+    return {
+
+        "공명":
+            target,
+
+        "연습횟수":
+            len(
+                rows
+            ),
+
+        "최근 일치도":
+            round(
+                latest
+            ),
+
+        "최고 일치도":
+            round(
+                best
+            ),
+
+        "최근 추세":
+            trend,
+    }
+
+
+def render_diary():
+
+    if not st.session_state.history:
+
+        return
+
+
+    with st.expander(
+        "📘 연습일지",
+        expanded=False
+    ):
+
+
+        summaries = []
+
+
+        for resonance in RESONANCES:
+
+            summary = resonance_summary(
+                resonance
+            )
+
+
+            if summary:
+
+                summaries.append(
+                    summary
+                )
+
+
+        if summaries:
+
+            st.markdown(
+                "#### 연습 요약"
+            )
+
+
+            st.dataframe(
+                pd.DataFrame(
+                    summaries
+                ),
+                use_container_width=True,
+                hide_index=True,
+            )
+
+
+        st.markdown(
+            "#### 회차별 기록"
+        )
+
+
+        for row in reversed(
+            st.session_state.history
+        ):
+
+
+            delta_text = ""
+
+
+            if row[
+                "delta"
+            ] is not None:
+
+                sign = (
+                    "+"
+                    if row[
+                        "delta"
+                    ]
+                    >=
+                    0
+                    else
+                    ""
+                )
+
+
+                delta_text = (
+                    f" · 이전 같은 공명 대비 "
+                    f"{sign}{row['delta']:.0f}"
+                )
+
+
+            st.markdown(
+                f"""
+<div class="diary-card">
+
+<div class="diary-title">
+{row['session_no']}회차 · {row['target']} ({row['syllable']})
+</div>
+
+<div class="diary-meta">
+결과: {row['status']}
+</div>
+
+<div style="margin-top:5px;font-size:.87rem;">
+
+목표 공명 일치도
+<b>{row['target_score']:.0f}</b>
+{delta_text}
+
+<br>
+
+가장 강한 공명:
+<b>{row['prediction']} {row['top_score']:.0f}</b>
+
+· 2순위:
+{row['second_name']} {row['second_score']:.0f}
+
+</div>
+
+</div>
+""",
+                unsafe_allow_html=True,
+            )
+
+
+        with st.expander(
+            "연구자용 상세 데이터",
+            expanded=False
+        ):
+
+
+            detail_df = pd.DataFrame(
+                st.session_state.history
+            )
+
+
+            researcher_columns = [
+
+                "session_no",
+
+                "target",
+
+                "syllable",
+
+                "prediction",
+
+                "status",
+
+                "target_score",
+
+                "top_score",
+
+                "second_name",
+
+                "second_score",
+
+                "voice_duration_sec",
+
+                "rms_db",
+
+                "f0_hz",
+
+                "f1_hz",
+
+                "f2_hz",
+
+                "f3_hz",
+
+                "hnr_db",
+
+                "spectral_centroid_hz",
+
+                "spectral_tilt",
+
+                "band_80_500_pct",
+
+                "band_500_1500_pct",
+
+                "band_1500_3000_pct",
+
+                "band_3000_5000_pct",
+
+                "timestamp",
+            ]
+
+
+            researcher_columns = [
+                column
+                for column
+                in researcher_columns
+                if column
+                in
+                detail_df.columns
+            ]
+
+
+            st.dataframe(
+                detail_df[
+                    researcher_columns
+                ],
+                use_container_width=True,
+                hide_index=True,
+            )
+
+
+        csv_bytes = (
+            detail_df
+            .to_csv(
+                index=False
+            )
+            .encode(
+                "utf-8-sig"
+            )
+        )
+
+
+        st.download_button(
+            "연습일지 CSV 다운로드",
+            data=csv_bytes,
+            file_name="resonance_practice_diary.csv",
+            mime="text/csv",
+            use_container_width=True,
+        )
+
+
+# =========================================================
 # HEADER
 # =========================================================
 
@@ -2251,8 +2994,7 @@ st.markdown(
 </div>
 
 <div class="sub-title">
-가슴 · 입천장 · 이빨·전방 · 비강 중 하나를 선택하고
-/아/를 5초간 발성하세요.
+연습할 공명을 선택하고 안내된 소리를 5초간 발성하세요.
 </div>
 """,
     unsafe_allow_html=True,
@@ -2265,14 +3007,19 @@ st.markdown(
 
 if st.session_state.page == "select":
 
+
     st.markdown(
         """
 <div class="card">
 
-<b>연습할 공명을 선택하세요.</b><br>
+<b>
+연습할 공명을 선택하세요.
+</b>
+
+<br>
 
 <span class="small">
-두개골 공명은 이번 버전부터 분석 대상에서 제외했습니다.
+각 공명에 가장 적합한 소리로 연습합니다.
 </span>
 
 </div>
@@ -2288,9 +3035,31 @@ if st.session_state.page == "select":
 
     with col1:
 
+
+        st.markdown(
+            f"""
+<div class="icon-wrap">
+{icon_svg("가슴")}
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+
+
+        st.markdown(
+            """
+<div class="choice-label">
+가슴 공명 · 하—
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+
+
         if st.button(
-            "🫁 가슴",
-            use_container_width=True
+            "가슴 공명",
+            use_container_width=True,
+            key="choose_chest"
         ):
 
             st.session_state.target = (
@@ -2306,9 +3075,30 @@ if st.session_state.page == "select":
             st.rerun()
 
 
+        st.markdown(
+            f"""
+<div class="icon-wrap">
+{icon_svg("이빨·전방")}
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+
+
+        st.markdown(
+            """
+<div class="choice-label">
+이빨·전방 공명 · 히—
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+
+
         if st.button(
-            "🦷 이빨·전방",
-            use_container_width=True
+            "이빨·전방 공명",
+            use_container_width=True,
+            key="choose_front"
         ):
 
             st.session_state.target = (
@@ -2326,9 +3116,31 @@ if st.session_state.page == "select":
 
     with col2:
 
+
+        st.markdown(
+            f"""
+<div class="icon-wrap">
+{icon_svg("입천장")}
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+
+
+        st.markdown(
+            """
+<div class="choice-label">
+입천장 공명 · 허—
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+
+
         if st.button(
-            "👄 입천장",
-            use_container_width=True
+            "입천장 공명",
+            use_container_width=True,
+            key="choose_palate"
         ):
 
             st.session_state.target = (
@@ -2344,9 +3156,30 @@ if st.session_state.page == "select":
             st.rerun()
 
 
+        st.markdown(
+            f"""
+<div class="icon-wrap">
+{icon_svg("비강")}
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+
+
+        st.markdown(
+            """
+<div class="choice-label">
+비강 공명 · 미—
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+
+
         if st.button(
-            "👃 비강",
-            use_container_width=True
+            "비강 공명",
+            use_container_width=True,
+            key="choose_nasal"
         ):
 
             st.session_state.target = (
@@ -2368,6 +3201,7 @@ if st.session_state.page == "select":
 
 elif st.session_state.page == "record":
 
+
     target = (
         st.session_state.target
     )
@@ -2382,12 +3216,28 @@ elif st.session_state.page == "record":
         f"""
 <div class="card">
 
+<div class="target-head">
+
+<div>
+{icon_svg(target, 54)}
+</div>
+
+<div>
+
 <div class="small">
-현재 목표
+현재 연습
 </div>
 
 <div class="target-title">
-{info['icon']} {target}
+{target} 공명
+</div>
+
+<div class="syllable">
+{info['syllable']}
+</div>
+
+</div>
+
 </div>
 
 </div>
@@ -2400,7 +3250,11 @@ elif st.session_state.page == "record":
         f"""
 <div class="guide">
 
-<b>/아/를 약 5초간 유지하세요.</b><br>
+<b>
+{info['syllable']}를 약 5초간 유지하세요.
+</b>
+
+<br>
 
 {info['guide']}
 
@@ -2455,6 +3309,7 @@ elif st.session_state.page == "record":
 
 elif st.session_state.page == "review":
 
+
     target = (
         st.session_state.target
     )
@@ -2464,11 +3319,25 @@ elif st.session_state.page == "review":
         f"""
 <div class="card">
 
-<b>
-{INFO[target]['icon']} {target}
-</b>
+<div class="target-head">
 
-공명 녹음 확인
+<div>
+{icon_svg(target, 48)}
+</div>
+
+<div>
+
+<div class="target-title">
+{target} 공명 녹음 확인
+</div>
+
+<div class="small">
+{INFO[target]['syllable']}
+</div>
+
+</div>
+
+</div>
 
 </div>
 """,
@@ -2516,12 +3385,13 @@ elif st.session_state.page == "review":
                     "공명 특성을 분석하고 있습니다..."
                 ):
 
+
                     features = analyze_audio(
                         st.session_state.audio_bytes
                     )
 
 
-                    ordered, similarity = classify(
+                    ordered, scores = classify(
                         features
                     )
 
@@ -2529,84 +3399,83 @@ elif st.session_state.page == "review":
                     result = build_result(
                         target,
                         ordered,
-                        similarity
+                        scores
+                    )
+
+
+                    session_no = (
+                        len(
+                            st.session_state.history
+                        )
+                        +
+                        1
+                    )
+
+
+                    attempt_no = target_attempt_number(
+                        target
                     )
 
 
                     history_row = {
 
-                        "목표":
+                        "session_no":
+                            session_no,
+
+                        "attempt_no":
+                            attempt_no,
+
+                        "timestamp":
+                            datetime.now().strftime(
+                                "%Y-%m-%d %H:%M:%S"
+                            ),
+
+                        "target":
                             target,
 
-                        "판정":
+                        "syllable":
+                            INFO[
+                                target
+                            ][
+                                "syllable"
+                            ],
+
+                        "prediction":
                             result[
                                 "prediction"
                             ],
 
-                        "상태":
+                        "status":
                             result[
                                 "status"
                             ],
 
-                        "신뢰도":
+                        "target_score":
                             result[
-                                "confidence"
+                                "target_score"
                             ],
 
-                        "F0":
-                            features[
-                                "f0_hz"
+                        "top_score":
+                            result[
+                                "top_score"
                             ],
 
-                        "F1":
-                            features[
-                                "f1_hz"
+                        "second_name":
+                            result[
+                                "second_name"
                             ],
 
-                        "F2":
-                            features[
-                                "f2_hz"
+                        "second_score":
+                            result[
+                                "second_score"
                             ],
 
-                        "F3":
-                            features[
-                                "f3_hz"
+                        "delta":
+                            result[
+                                "delta"
                             ],
 
-                        "HNR":
-                            features[
-                                "hnr_db"
-                            ],
-
-                        "Centroid":
-                            features[
-                                "spectral_centroid_hz"
-                            ],
-
-                        "Tilt":
-                            features[
-                                "spectral_tilt"
-                            ],
-
-                        "80_500":
-                            features[
-                                "band_80_500_pct"
-                            ],
-
-                        "500_1500":
-                            features[
-                                "band_500_1500_pct"
-                            ],
-
-                        "1500_3000":
-                            features[
-                                "band_1500_3000_pct"
-                            ],
-
-                        "3000_5000":
-                            features[
-                                "band_3000_5000_pct"
-                            ],
+                        **features,
                     }
 
 
@@ -2631,7 +3500,9 @@ elif st.session_state.page == "review":
             except Exception as error:
 
                 st.error(
-                    f"분석 오류: {error}"
+                    str(
+                        error
+                    )
                 )
 
 
@@ -2640,6 +3511,7 @@ elif st.session_state.page == "review":
 # =========================================================
 
 elif st.session_state.page == "result":
+
 
     result = (
         st.session_state.result
@@ -2657,7 +3529,7 @@ elif st.session_state.page == "result":
         f"""
 <div class="{result['css']}">
 
-<div style="font-size:.82rem;font-weight:750;">
+<div class="small">
 분석 결과
 </div>
 
@@ -2669,8 +3541,70 @@ elif st.session_state.page == "result":
 {result['message']}
 </div>
 
-<div class="small" style="margin-top:7px;">
-판정 신뢰도 · <b>{result['confidence']}</b>
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+
+
+    delta = (
+        result[
+            "delta"
+        ]
+    )
+
+
+    if delta is None:
+
+        delta_html = (
+            '<span class="score-delta-flat">'
+            '첫 기록'
+            '</span>'
+        )
+
+
+    elif delta >= 3:
+
+        delta_html = (
+            f'<span class="score-delta-up">'
+            f'▲ {delta:.0f}'
+            f'</span>'
+        )
+
+
+    elif delta <= -3:
+
+        delta_html = (
+            f'<span class="score-delta-down">'
+            f'▼ {abs(delta):.0f}'
+            f'</span>'
+        )
+
+
+    else:
+
+        delta_html = (
+            '<span class="score-delta-flat">'
+            '비슷함'
+            '</span>'
+        )
+
+
+    st.markdown(
+        f"""
+<div class="score-box">
+
+<div class="score-label">
+{target} 공명 일치도
+</div>
+
+<div class="score-value">
+{result['target_score']:.0f}
+</div>
+
+<div class="small">
+이전 같은 공명 연습 대비
+{delta_html}
 </div>
 
 </div>
@@ -2680,13 +3614,13 @@ elif st.session_state.page == "result":
 
 
     st.markdown(
-        "#### 4개 공명 상대 유사도"
+        "#### 현재 공명 분석"
     )
 
 
-    ordered_similarity = sorted(
+    ordered_scores = sorted(
         result[
-            "similarity"
+            "scores"
         ].items(),
         key=lambda x: x[1],
         reverse=True
@@ -2696,13 +3630,7 @@ elif st.session_state.page == "result":
     for (
         name,
         value
-    ) in ordered_similarity:
-
-        icon = INFO[
-            name
-        ][
-            "icon"
-        ]
+    ) in ordered_scores:
 
 
         st.markdown(
@@ -2712,7 +3640,7 @@ elif st.session_state.page == "result":
 <div class="bar-label">
 
 <span>
-{icon} {name}
+{name}
 </span>
 
 <span>
@@ -2736,6 +3664,24 @@ style="width:{min(max(value, 0), 100):.1f}%">
         )
 
 
+    st.markdown(
+        f"""
+<div class="trend-box">
+
+<b>
+연습 변화
+</b>
+
+<br>
+
+{result['trend_text']}
+
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+
+
     if (
         result[
             "prediction"
@@ -2743,6 +3689,7 @@ style="width:{min(max(value, 0), 100):.1f}%">
         !=
         target
     ):
+
 
         st.markdown(
             f"""
@@ -2763,21 +3710,10 @@ style="width:{min(max(value, 0), 100):.1f}%">
 
 
     st.caption(
-        "위 숫자는 공명이 존재할 확률이 아니라 "
-        "현재 4개 기준 패턴 사이의 상대적 유사도를 "
-        "보기 쉽게 환산한 값입니다."
+        "공명 일치도는 실제 공명의 양이나 확률이 아니라, "
+        "현재 음성이 4개 훈련 기준 패턴 중 어디에 가까운지를 "
+        "비교한 연습용 점수입니다."
     )
-
-
-    if result[
-        "out_of_reference"
-    ]:
-
-        st.warning(
-            "현재 모델은 남성 연구용 1차 기준 데이터로 만든 베타입니다. "
-            "기준 범위를 크게 벗어난 음성은 억지로 정답을 내지 않고 "
-            "판정을 보류합니다."
-        )
 
 
     col1, col2 = st.columns(
@@ -2817,42 +3753,7 @@ style="width:{min(max(value, 0), 100):.1f}%">
 
 
 # =========================================================
-# RESEARCH LOG
+# PRACTICE DIARY
 # =========================================================
 
-if st.session_state.history:
-
-    with st.expander(
-        "연구용 측정 기록"
-    ):
-
-        history_df = pd.DataFrame(
-            st.session_state.history
-        )
-
-
-        st.dataframe(
-            history_df,
-            use_container_width=True,
-            hide_index=True
-        )
-
-
-        csv_bytes = (
-            history_df
-            .to_csv(
-                index=False
-            )
-            .encode(
-                "utf-8-sig"
-            )
-        )
-
-
-        st.download_button(
-            "측정 기록 CSV 다운로드",
-            data=csv_bytes,
-            file_name="male_student_resonance_results.csv",
-            mime="text/csv",
-            use_container_width=True
-        )
+render_diary()
