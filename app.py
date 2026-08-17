@@ -29,10 +29,6 @@ st.markdown(
     """
 <style>
 
-/* =====================================================
-   전체
-   ===================================================== */
-
 .block-container {
     max-width: 760px;
     padding-top: 1.2rem;
@@ -44,14 +40,14 @@ st.markdown(
     font-weight: 800;
     letter-spacing: -0.045em;
     line-height: 1.15;
-    margin: 0 0 0.25rem 0;
+    margin: 0 0 0.25rem;
 }
 
 .sub-title {
     font-size: 0.94rem;
     color: #666;
     line-height: 1.45;
-    margin: 0 0 1.3rem 0;
+    margin: 0 0 1.3rem;
 }
 
 .step-label {
@@ -59,41 +55,31 @@ st.markdown(
     font-weight: 700;
     color: #7a7a7a;
     letter-spacing: 0.07em;
-    margin: 0 0 0.15rem 0;
+    margin: 0 0 0.15rem;
 }
 
 .step-title {
     font-size: 1.5rem;
     font-weight: 800;
     line-height: 1.22;
-    margin: 0 0 0.75rem 0;
+    margin: 0 0 0.75rem;
 }
-
-
-/* =====================================================
-   설명
-   ===================================================== */
 
 .guide-box {
     background: #f5f6f8;
     border-radius: 13px;
     padding: 14px 17px;
-    margin: 0 0 12px 0;
+    margin: 0 0 12px;
     font-size: 0.93rem;
     line-height: 1.55;
 }
-
-
-/* =====================================================
-   녹음 완료
-   ===================================================== */
 
 .complete-box {
     background: #eef9f2;
     border: 1px solid #cae8d4;
     padding: 13px 16px;
     border-radius: 13px;
-    margin: 8px 0 12px 0;
+    margin: 8px 0 12px;
 }
 
 .complete-title {
@@ -107,18 +93,12 @@ st.markdown(
     margin-top: 2px;
 }
 
-
-/* =====================================================
-   결과
-   ===================================================== */
-
 .result-good,
 .result-mid,
-.result-bad,
-.result-info {
+.result-bad {
     border-radius: 16px;
     padding: 22px;
-    margin: 12px 0 16px 0;
+    margin: 12px 0 16px;
 }
 
 .result-good {
@@ -134,11 +114,6 @@ st.markdown(
 .result-bad {
     background: #fff0f0;
     border: 1px solid #efc0c0;
-}
-
-.result-info {
-    background: #eef4ff;
-    border: 1px solid #cad9f4;
 }
 
 .result-title {
@@ -157,11 +132,6 @@ st.markdown(
     font-size: 0.95rem;
     line-height: 1.55;
 }
-
-
-/* =====================================================
-   기준 / 현재 비교
-   ===================================================== */
 
 .compare-card {
     border: 1px solid #e1e4e8;
@@ -196,16 +166,11 @@ st.markdown(
     margin-top: 2px;
 }
 
-
-/* =====================================================
-   판단근거 / 팁
-   ===================================================== */
-
 .reason-box {
     border: 1px solid #e1e4e8;
     border-radius: 14px;
     padding: 15px 16px;
-    margin: 8px 0 15px 0;
+    margin: 8px 0 15px;
 }
 
 .tip-box {
@@ -213,15 +178,19 @@ st.markdown(
     border-radius: 14px;
     padding: 15px 16px;
     line-height: 1.55;
-    margin: 8px 0 15px 0;
+    margin: 8px 0 15px;
 }
 
+.confidence-box {
+    border-radius: 12px;
+    padding: 11px 13px;
+    margin: 7px 0 15px;
+    font-size: 0.9rem;
+    background: #f8f9fa;
+    border: 1px solid #e5e7eb;
+}
 
-/* =====================================================
-   스마트폰 최적화
-   ===================================================== */
-
-@media (max-width: 600px) {
+@media(max-width: 600px) {
 
     .block-container {
         padding-top: 0.7rem;
@@ -260,8 +229,7 @@ st.markdown(
 
     .result-good,
     .result-mid,
-    .result-bad,
-    .result-info {
+    .result-bad {
         padding: 17px;
         margin-top: 9px;
         border-radius: 13px;
@@ -289,7 +257,8 @@ st.markdown(
     }
 
     .reason-box,
-    .tip-box {
+    .tip-box,
+    .confidence-box {
         padding: 13px;
         font-size: 0.88rem;
     }
@@ -312,7 +281,6 @@ st.markdown(
         margin-top: 0 !important;
         margin-bottom: 0.5rem !important;
     }
-
 }
 
 </style>
@@ -335,6 +303,7 @@ defaults = {
 }
 
 for key, value in defaults.items():
+
     if key not in st.session_state:
         st.session_state[key] = value
 
@@ -376,7 +345,7 @@ RESONANCES = {
         "icon": "👃",
         "description": "코 주변과 얼굴 중앙에서 느껴지는 울림",
         "guide": (
-            "코로 소리를 억지로 보내기보다 "
+            "코로 억지로 보내기보다 "
             "얼굴 중앙에 진동이 생기는 느낌을 찾아보세요."
         ),
     },
@@ -388,6 +357,149 @@ RESONANCES = {
             "목에 힘을 주지 말고 "
             "소리가 머리 위쪽으로 가볍게 확장되는 느낌을 찾아보세요."
         ),
+    },
+}
+
+
+# =========================================================
+# 1차 판정 모델
+# =========================================================
+#
+# 중요:
+# 아직 최종 과학적 기준이 아니라,
+# 교수자 직접 테스트를 위한 1차 휴리스틱.
+#
+# =========================================================
+
+MODELS = {
+
+    "가슴": {
+
+        "primary_key": "band_80_500",
+        "primary_label": "저역 에너지",
+        "primary_direction": 1,
+        "primary_weight": 0.75,
+
+        "secondary_key": "centroid",
+        "secondary_label": "소리의 에너지 중심 하향",
+        "secondary_direction": -1,
+        "secondary_weight": 0.25,
+
+        "tip_good":
+            "지금 만든 가슴 쪽 울림의 느낌을 기억하고 "
+            "같은 음높이로 다시 재현해 보세요.",
+
+        "tip_mid":
+            "음을 낮추지 말고 "
+            "가슴 쪽 울림을 조금 더 풍부하게 만들어 보세요.",
+
+        "tip_bad":
+            "기준 발성과 같은 높이를 유지한 채 "
+            "가슴 쪽 진동을 다시 찾아보세요.",
+    },
+
+
+    "입천장": {
+
+        "primary_key": "band_500_1500",
+        "primary_label": "중저역·구강 에너지",
+        "primary_direction": 1,
+        "primary_weight": 0.70,
+
+        "secondary_key": "band_1500_3000",
+        "secondary_label": "중고역 에너지",
+        "secondary_direction": 1,
+        "secondary_weight": 0.30,
+
+        "tip_good":
+            "입 안의 공간감을 유지하면서 "
+            "같은 울림을 다시 재현해 보세요.",
+
+        "tip_mid":
+            "턱과 혀에 힘을 빼고 "
+            "입천장 쪽 공간감을 조금 더 만들어 보세요.",
+
+        "tip_bad":
+            "소리를 밀지 말고 "
+            "입 안의 공간을 넓게 만든 뒤 다시 시도해 보세요.",
+    },
+
+
+    "이빨·전방": {
+
+        "primary_key": "band_1500_3000",
+        "primary_label": "전방 명료도 대역",
+        "primary_direction": 1,
+        "primary_weight": 0.75,
+
+        "secondary_key": "centroid",
+        "secondary_label": "소리의 에너지 중심 전진",
+        "secondary_direction": 1,
+        "secondary_weight": 0.25,
+
+        "tip_good":
+            "윗니와 입 앞쪽에 모인 선명한 울림을 "
+            "같은 힘으로 다시 재현해 보세요.",
+
+        "tip_mid":
+            "볼륨을 키우기보다 "
+            "소리의 초점을 조금 더 앞쪽에 모아보세요.",
+
+        "tip_bad":
+            "목에서 밀어내지 말고 "
+            "윗니 뒤쪽으로 소리의 초점을 옮겨보세요.",
+    },
+
+
+    "비강": {
+
+        "primary_key": "band_80_500",
+        "primary_label": "저역 비강 관련 에너지",
+        "primary_direction": 1,
+        "primary_weight": 0.55,
+
+        "secondary_key": "band_500_1500",
+        "secondary_label": "중저역 에너지 감소",
+        "secondary_direction": -1,
+        "secondary_weight": 0.45,
+
+        "tip_good":
+            "얼굴 중앙에서 느껴지는 진동을 유지하면서 "
+            "과도한 콧소리는 피하세요.",
+
+        "tip_mid":
+            "코로 소리를 밀기보다 "
+            "코 주변의 진동만 조금 더 선명하게 찾아보세요.",
+
+        "tip_bad":
+            "입과 코의 통로를 억지로 막지 말고 "
+            "얼굴 중앙의 가벼운 진동부터 다시 찾아보세요.",
+    },
+
+
+    "두개골": {
+
+        "primary_key": "band_3000_5000",
+        "primary_label": "상부 고역 에너지",
+        "primary_direction": 1,
+        "primary_weight": 0.75,
+
+        "secondary_key": "centroid",
+        "secondary_label": "소리의 에너지 중심 상승",
+        "secondary_direction": 1,
+        "secondary_weight": 0.25,
+
+        "tip_good":
+            "목의 힘을 유지하지 않고 "
+            "가벼운 상부 울림을 같은 음높이에서 다시 재현해 보세요.",
+
+        "tip_mid":
+            "소리를 세게 올리기보다 "
+            "가볍고 선명한 상부 배음을 조금 더 만들어 보세요.",
+
+        "tip_bad":
+            "목에 힘을 주지 말고 "
+            "가벼운 소리로 머리 위쪽의 울림을 다시 찾아보세요.",
     },
 }
 
@@ -433,8 +545,10 @@ RECORDER_CSS = """
 }
 
 .recorder {
+
     width: 100%;
     height: 100%;
+
     box-sizing: border-box;
 
     border: 1px solid #e1e4e8;
@@ -442,6 +556,7 @@ RECORDER_CSS = """
 
     display: flex;
     flex-direction: column;
+
     align-items: center;
     justify-content: center;
 
@@ -456,14 +571,16 @@ RECORDER_CSS = """
 
 
 .record-button {
+
     width: 78px;
     height: 78px;
+
     flex: 0 0 78px;
 
     border: none;
     border-radius: 50%;
 
-    background: #ffffff;
+    background: #fff;
 
     display: flex;
     align-items: center;
@@ -472,8 +589,8 @@ RECORDER_CSS = """
     cursor: pointer;
 
     box-shadow:
-        0 4px 14px rgba(0,0,0,0.13),
-        inset 0 0 0 1px rgba(0,0,0,0.06);
+        0 4px 14px rgba(0,0,0,.13),
+        inset 0 0 0 1px rgba(0,0,0,.06);
 
     transition:
         transform .15s ease,
@@ -493,7 +610,9 @@ RECORDER_CSS = """
 
 
 .record-button.recording {
+
     background: #e53935;
+
     animation: pulse 1.05s infinite;
 }
 
@@ -504,13 +623,17 @@ RECORDER_CSS = """
 
 
 .record-button.recording .mic-icon::after {
+
     content: "■";
+
     font-size: 25px;
+
     color: white;
 }
 
 
 .record-button.done {
+
     background: #e8f6ed;
 }
 
@@ -521,17 +644,23 @@ RECORDER_CSS = """
 
 
 .record-button.done .mic-icon::after {
+
     content: "✓";
+
     font-size: 36px;
+
     font-weight: 800;
+
     color: #269451;
 }
 
 
 .status {
+
     margin-top: 8px;
 
     font-size: 14px;
+
     line-height: 1.15;
 
     font-weight: 750;
@@ -551,9 +680,11 @@ RECORDER_CSS = """
 
 
 .timer {
+
     margin-top: 3px;
 
     font-size: 25px;
+
     line-height: 1.1;
 
     font-weight: 850;
@@ -565,7 +696,9 @@ RECORDER_CSS = """
 
 
 .progress-wrap {
+
     width: min(300px, 80%);
+
     height: 5px;
 
     margin-top: 8px;
@@ -579,7 +712,9 @@ RECORDER_CSS = """
 
 
 .progress {
+
     width: 0%;
+
     height: 100%;
 
     background: #e53935;
@@ -589,9 +724,11 @@ RECORDER_CSS = """
 
 
 .help {
+
     margin-top: 6px;
 
     font-size: 10.5px;
+
     line-height: 1.15;
 
     color: #7a7f87;
@@ -618,7 +755,7 @@ RECORDER_CSS = """
 """
 
 
-RECORDER_JS = """
+RECORDER_JS = r"""
 
 export default function(component) {
 
@@ -650,9 +787,13 @@ export default function(component) {
     let recording = false;
 
     let stream = null;
+
     let audioContext = null;
+
     let source = null;
+
     let processor = null;
+
     let silentGain = null;
 
     let buffers = [];
@@ -662,6 +803,7 @@ export default function(component) {
     let startTime = 0;
 
     let timerFrame = null;
+
     let stopTimer = null;
 
 
@@ -672,7 +814,8 @@ export default function(component) {
             /
             1000;
 
-        return "00:" +
+        return "00:"
+            +
             sec.toFixed(1).padStart(4, "0");
     }
 
@@ -731,7 +874,8 @@ export default function(component) {
 
         const buffer =
             new ArrayBuffer(
-                44 +
+                44
+                +
                 samples.length * 2
             );
 
@@ -892,12 +1036,11 @@ export default function(component) {
                         const value =
                             reader.result;
 
-                        const comma =
-                            value.indexOf(",");
-
                         resolve(
                             value.substring(
-                                comma + 1
+                                value.indexOf(",")
+                                +
+                                1
                             )
                         );
                     };
@@ -963,23 +1106,29 @@ export default function(component) {
     async function cleanup() {
 
         try {
+
             if (processor) {
                 processor.disconnect();
             }
+
         } catch {}
 
 
         try {
+
             if (source) {
                 source.disconnect();
             }
+
         } catch {}
 
 
         try {
+
             if (silentGain) {
                 silentGain.disconnect();
             }
+
         } catch {}
 
 
@@ -999,15 +1148,21 @@ export default function(component) {
         if (audioContext) {
 
             try {
+
                 await audioContext.close();
+
             } catch {}
         }
 
 
         processor = null;
+
         source = null;
+
         silentGain = null;
+
         stream = null;
+
         audioContext = null;
     }
 
@@ -1116,11 +1271,20 @@ export default function(component) {
 
             stream =
                 await navigator.mediaDevices.getUserMedia({
+
                     audio: {
-                        echoCancellation: false,
-                        noiseSuppression: false,
-                        autoGainControl: false,
-                        channelCount: 1
+
+                        echoCancellation:
+                            false,
+
+                        noiseSuppression:
+                            false,
+
+                        autoGainControl:
+                            false,
+
+                        channelCount:
+                            1
                     }
                 });
 
@@ -1174,7 +1338,8 @@ export default function(component) {
 
 
                     const input =
-                        event.inputBuffer
+                        event
+                        .inputBuffer
                         .getChannelData(0);
 
 
@@ -1201,7 +1366,8 @@ export default function(component) {
             );
 
 
-            recording = true;
+            recording =
+                true;
 
 
             button.classList.remove(
@@ -1308,7 +1474,9 @@ export default function(component) {
         if (audioContext) {
 
             try {
+
                 audioContext.close();
+
             } catch {}
         }
     };
@@ -1318,7 +1486,7 @@ export default function(component) {
 
 recorder_component = (
     st.components.v2.component(
-        "resonance_mobile_recorder",
+        "resonance_mobile_recorder_v2",
         html=RECORDER_HTML,
         css=RECORDER_CSS,
         js=RECORDER_JS,
@@ -1329,11 +1497,14 @@ recorder_component = (
 def five_second_recorder(key):
 
     result = recorder_component(
+
         default={
-            "audio_b64": None
+            "audio_b64":
+                None
         },
 
-        on_audio_b64_change=lambda: None,
+        on_audio_b64_change=
+            lambda: None,
 
         key=key,
 
@@ -1343,11 +1514,12 @@ def five_second_recorder(key):
     )
 
 
-    audio_b64 = getattr(
-        result,
-        "audio_b64",
-        None
-    )
+    audio_b64 =
+        getattr(
+            result,
+            "audio_b64",
+            None
+        )
 
 
     if not audio_b64:
@@ -1366,7 +1538,7 @@ def five_second_recorder(key):
 
 
 # =========================================================
-# AUDIO UTILS
+# AUDIO FUNCTIONS
 # =========================================================
 
 def audio_duration(audio_bytes):
@@ -1378,7 +1550,9 @@ def audio_duration(audio_bytes):
     )
 
     return float(
-        len(data) / sr
+        len(data)
+        /
+        sr
     )
 
 
@@ -1424,22 +1598,22 @@ def percent_change(
 
 def band_ratio(
     power,
-    frequencies,
+    freqs,
     low,
     high
 ):
 
     band_mask = (
-        (frequencies >= low)
+        (freqs >= low)
         &
-        (frequencies < high)
+        (freqs < high)
     )
 
 
     total_mask = (
-        (frequencies >= 80)
+        (freqs >= 80)
         &
-        (frequencies < 5000)
+        (freqs < 5000)
     )
 
 
@@ -1468,10 +1642,12 @@ def band_ratio(
 
 
 # =========================================================
-# AUDIO ANALYSIS
+# ANALYSIS
 # =========================================================
 
-def analyze_audio(audio_bytes):
+def analyze_audio(
+    audio_bytes
+):
 
     with tempfile.NamedTemporaryFile(
         suffix=".wav",
@@ -1494,9 +1670,11 @@ def analyze_audio(audio_bytes):
         )
 
 
-        y, _ = librosa.effects.trim(
-            y,
-            top_db=35
+        y, _ = (
+            librosa.effects.trim(
+                y,
+                top_db=35
+            )
         )
 
 
@@ -1514,17 +1692,17 @@ def analyze_audio(audio_bytes):
             )
 
 
-        y = librosa.util.normalize(
-            y
+        y = (
+            librosa.util.normalize(
+                y
+            )
         )
 
 
-        # -------------------------------------------------
-        # F0
-        # -------------------------------------------------
-
-        sound = parselmouth.Sound(
-            tmp.name
+        sound = (
+            parselmouth.Sound(
+                tmp.name
+            )
         )
 
 
@@ -1551,10 +1729,6 @@ def analyze_audio(audio_bytes):
         )
 
 
-        # -------------------------------------------------
-        # SPECTRUM
-        # -------------------------------------------------
-
         spectrum = np.abs(
             librosa.stft(
                 y,
@@ -1571,13 +1745,15 @@ def analyze_audio(audio_bytes):
         )
 
 
-        mean_power = np.mean(
-            power,
-            axis=1
+        mean_power = (
+            np.mean(
+                power,
+                axis=1
+            )
         )
 
 
-        frequencies = (
+        freqs = (
             librosa.fft_frequencies(
                 sr=sr,
                 n_fft=2048
@@ -1587,7 +1763,9 @@ def analyze_audio(audio_bytes):
 
         centroid = float(
             np.mean(
-                librosa.feature.spectral_centroid(
+                librosa
+                .feature
+                .spectral_centroid(
                     y=y,
                     sr=sr
                 )
@@ -1609,7 +1787,7 @@ def analyze_audio(audio_bytes):
             "band_80_500":
                 band_ratio(
                     mean_power,
-                    frequencies,
+                    freqs,
                     80,
                     500
                 ),
@@ -1617,7 +1795,7 @@ def analyze_audio(audio_bytes):
             "band_500_1500":
                 band_ratio(
                     mean_power,
-                    frequencies,
+                    freqs,
                     500,
                     1500
                 ),
@@ -1625,7 +1803,7 @@ def analyze_audio(audio_bytes):
             "band_1500_3000":
                 band_ratio(
                     mean_power,
-                    frequencies,
+                    freqs,
                     1500,
                     3000
                 ),
@@ -1633,7 +1811,7 @@ def analyze_audio(audio_bytes):
             "band_3000_5000":
                 band_ratio(
                     mean_power,
-                    frequencies,
+                    freqs,
                     3000,
                     5000
                 ),
@@ -1641,63 +1819,132 @@ def analyze_audio(audio_bytes):
 
 
 # =========================================================
-# CHEST MODEL
+# GENERIC RESONANCE MODEL
 # =========================================================
 
-def judge_chest(
+def feature_change(
     baseline,
-    target
+    target,
+    key,
+    direction
 ):
 
-    low_gain = percent_change(
-        baseline["band_80_500"],
-        target["band_80_500"]
+    raw = percent_change(
+        baseline[key],
+        target[key]
     )
 
 
-    centroid_change = (
-        (
-            baseline["centroid"]
-            -
-            target["centroid"]
-        )
-        /
-        baseline["centroid"]
-        *
-        100
-    )
+    if not np.isfinite(raw):
+        return 0.0
 
 
-    f0_change = abs(
-        percent_change(
-            baseline["f0"],
-            target["f0"]
-        )
-    )
-
-
-    low_gain = float(
+    return float(
         np.clip(
-            low_gain,
+            raw * direction,
             -50,
             50
         )
     )
 
 
-    centroid_change = float(
-        np.clip(
-            centroid_change,
-            -30,
-            30
+def confidence_from_pitch(
+    f0_change
+):
+
+    if not np.isfinite(
+        f0_change
+    ):
+
+        return (
+            "낮음",
+            "기본 음높이를 안정적으로 측정하지 못했습니다."
         )
+
+
+    if f0_change <= 12:
+
+        return (
+            "높음",
+            f"두 발성의 음높이 차이가 "
+            f"{f0_change:.1f}%로 안정적입니다."
+        )
+
+
+    if f0_change <= 25:
+
+        return (
+            "보통",
+            f"음높이가 {f0_change:.1f}% 달라 "
+            "공명 변화에 일부 영향을 줄 수 있습니다."
+        )
+
+
+    return (
+        "낮음",
+        f"음높이가 {f0_change:.1f}% 달라 "
+        "결과에 음높이 영향이 비교적 큽니다."
+    )
+
+
+def judge_resonance(
+    focus,
+    baseline,
+    target
+):
+
+    model = (
+        MODELS[
+            focus
+        ]
+    )
+
+
+    primary = feature_change(
+
+        baseline,
+        target,
+
+        model[
+            "primary_key"
+        ],
+
+        model[
+            "primary_direction"
+        ],
+    )
+
+
+    secondary = feature_change(
+
+        baseline,
+        target,
+
+        model[
+            "secondary_key"
+        ],
+
+        model[
+            "secondary_direction"
+        ],
     )
 
 
     score = (
-        low_gain * 0.8
+
+        primary
+        *
+        model[
+            "primary_weight"
+        ]
+
         +
-        centroid_change * 0.2
+
+        secondary
+        *
+        model[
+            "secondary_weight"
+        ]
     )
 
 
@@ -1710,72 +1957,107 @@ def judge_chest(
     )
 
 
-    if (
-        np.isfinite(f0_change)
-        and
-        f0_change > 15
-    ):
-
-        status = "retry"
-        css = "result-mid"
-
-        title = "다시 측정해 주세요"
-
-        message = (
-            "두 발성의 음높이가 많이 달라 "
-            "가슴 공명 변화만을 정확하게 비교하기 어렵습니다."
+    f0_change = abs(
+        percent_change(
+            baseline["f0"],
+            target["f0"]
         )
+    )
 
 
-    elif score >= 10:
+    confidence, confidence_msg = (
+        confidence_from_pitch(
+            f0_change
+        )
+    )
+
+
+    if score >= 10:
 
         status = "good"
-        css = "result-good"
-
         title = "잘 되고 있습니다"
-
-        message = (
-            "기준 발성보다 가슴 공명과 관련된 "
-            "음향 특성이 뚜렷하게 강화되었습니다."
-        )
+        css = "result-good"
 
 
     elif score >= 3:
 
         status = "mid"
-        css = "result-mid"
-
         title = "방향은 맞습니다"
-
-        message = (
-            "가슴 공명 변화가 나타나고 있습니다. "
-            "현재 느낌을 유지하면서 울림을 조금 더 만들어 보세요."
-        )
+        css = "result-mid"
 
 
     elif score > -3:
 
         status = "neutral"
-        css = "result-mid"
-
         title = "뚜렷한 변화가 없습니다"
-
-        message = (
-            "기준 발성과 비교했을 때 "
-            "가슴 공명이 충분히 강화되지는 않았습니다."
-        )
+        css = "result-mid"
 
 
     else:
 
         status = "bad"
+
+        title = (
+            f"{focus} 공명 특성이 감소했습니다"
+        )
+
         css = "result-bad"
 
-        title = "가슴 공명이 감소했습니다"
+
+    if status == "good":
 
         message = (
-            "기준 발성보다 가슴 공명과 관련된 "
+            f"기준 발성보다 {focus} 공명과 관련된 "
+            "음향 특성이 뚜렷하게 강화되었습니다."
+        )
+
+        tip = (
+            model[
+                "tip_good"
+            ]
+        )
+
+
+    elif status == "mid":
+
+        message = (
+            f"{focus} 공명과 관련된 변화가 "
+            "나타나고 있습니다."
+        )
+
+        tip = (
+            model[
+                "tip_mid"
+            ]
+        )
+
+
+    elif status == "neutral":
+
+        message = (
+            f"기준 발성과 비교했을 때 "
+            f"{focus} 공명의 뚜렷한 강화는 "
+            "확인되지 않았습니다."
+        )
+
+        tip = (
+            model[
+                "tip_mid"
+            ]
+        )
+
+
+    else:
+
+        message = (
+            f"기준 발성보다 {focus} 공명과 관련된 "
             "음향 특성이 감소했습니다."
+        )
+
+        tip = (
+            model[
+                "tip_bad"
+            ]
         )
 
 
@@ -1784,11 +2066,11 @@ def judge_chest(
         "status":
             status,
 
-        "css":
-            css,
-
         "title":
             title,
+
+        "css":
+            css,
 
         "message":
             message,
@@ -1796,14 +2078,23 @@ def judge_chest(
         "score":
             score,
 
-        "low_gain":
-            low_gain,
+        "primary":
+            primary,
 
-        "centroid_change":
-            centroid_change,
+        "secondary":
+            secondary,
 
         "f0_change":
             f0_change,
+
+        "confidence":
+            confidence,
+
+        "confidence_msg":
+            confidence_msg,
+
+        "tip":
+            tip,
     }
 
 
@@ -1822,12 +2113,16 @@ if st.session_state.page == "select":
 
 else:
 
-    focus = st.session_state.focus
+    focus = (
+        st.session_state.focus
+    )
+
 
     title = (
         f"{RESONANCES[focus]['icon']} "
         f"{focus} 공명 훈련"
     )
+
 
     subtitle = (
         f"기준 발성과 비교하여 "
@@ -1836,21 +2131,13 @@ else:
 
 
 st.markdown(
-    f"""
-<div class="main-title">
-{title}
-</div>
-""",
+    f'<div class="main-title">{title}</div>',
     unsafe_allow_html=True,
 )
 
 
 st.markdown(
-    f"""
-<div class="sub-title">
-{subtitle}
-</div>
-""",
+    f'<div class="sub-title">{subtitle}</div>',
     unsafe_allow_html=True,
 )
 
@@ -1868,7 +2155,9 @@ if st.session_state.page == "select":
 
 
     st.markdown(
-        '<div class="step-title">훈련할 공명을 선택하세요</div>',
+        '<div class="step-title">'
+        '훈련할 공명을 선택하세요'
+        '</div>',
         unsafe_allow_html=True,
     )
 
@@ -1885,9 +2174,11 @@ if st.session_state.page == "select":
     )
 
 
-    info = RESONANCES[
-        focus
-    ]
+    info = (
+        RESONANCES[
+            focus
+        ]
+    )
 
 
     st.markdown(
@@ -1949,12 +2240,11 @@ elif st.session_state.page == "baseline_record":
 
 
     audio = five_second_recorder(
-        key=(
-            "baseline_"
-            +
-            str(
-                st.session_state.baseline_recorder_id
-            )
+        "baseline_"
+        +
+        str(
+            st.session_state
+            .baseline_recorder_id
         )
     )
 
@@ -2010,7 +2300,9 @@ elif st.session_state.page == "baseline_review":
         f"""
 <div class="complete-box">
 <div class="complete-title">✅ 녹음 완료</div>
-<div class="complete-time">녹음 시간 · {duration:.1f}초</div>
+<div class="complete-time">
+녹음 시간 · {duration:.1f}초
+</div>
 </div>
 """,
         unsafe_allow_html=True,
@@ -2023,7 +2315,9 @@ elif st.session_state.page == "baseline_review":
     )
 
 
-    col1, col2 = st.columns(2)
+    col1, col2 = (
+        st.columns(2)
+    )
 
 
     with col1:
@@ -2064,16 +2358,21 @@ elif st.session_state.page == "baseline_review":
 
 
 # =========================================================
-# STEP 3 — TARGET RECORD
+# STEP 3 — TARGET
 # =========================================================
 
 elif st.session_state.page == "target_record":
 
-    focus = st.session_state.focus
+    focus = (
+        st.session_state.focus
+    )
 
-    info = RESONANCES[
-        focus
-    ]
+
+    info = (
+        RESONANCES[
+            focus
+        ]
+    )
 
 
     st.markdown(
@@ -2083,7 +2382,9 @@ elif st.session_state.page == "target_record":
 
 
     st.markdown(
-        f'<div class="step-title">{focus} 공명 발성</div>',
+        f'<div class="step-title">'
+        f'{focus} 공명 발성'
+        f'</div>',
         unsafe_allow_html=True,
     )
 
@@ -2101,12 +2402,11 @@ elif st.session_state.page == "target_record":
 
 
     audio = five_second_recorder(
-        key=(
-            "target_"
-            +
-            str(
-                st.session_state.target_recorder_id
-            )
+        "target_"
+        +
+        str(
+            st.session_state
+            .target_recorder_id
         )
     )
 
@@ -2130,7 +2430,10 @@ elif st.session_state.page == "target_record":
 
 elif st.session_state.page == "target_review":
 
-    focus = st.session_state.focus
+    focus = (
+        st.session_state.focus
+    )
+
 
     duration = audio_duration(
         st.session_state.target_audio
@@ -2144,7 +2447,9 @@ elif st.session_state.page == "target_review":
 
 
     st.markdown(
-        f'<div class="step-title">{focus} 공명 발성 확인</div>',
+        f'<div class="step-title">'
+        f'{focus} 공명 발성 확인'
+        f'</div>',
         unsafe_allow_html=True,
     )
 
@@ -2153,7 +2458,9 @@ elif st.session_state.page == "target_review":
         f"""
 <div class="complete-box">
 <div class="complete-title">✅ 녹음 완료</div>
-<div class="complete-time">녹음 시간 · {duration:.1f}초</div>
+<div class="complete-time">
+녹음 시간 · {duration:.1f}초
+</div>
 </div>
 """,
         unsafe_allow_html=True,
@@ -2166,7 +2473,9 @@ elif st.session_state.page == "target_review":
     )
 
 
-    col1, col2 = st.columns(2)
+    col1, col2 = (
+        st.columns(2)
+    )
 
 
     with col1:
@@ -2212,7 +2521,9 @@ elif st.session_state.page == "target_review":
 
 elif st.session_state.page == "result":
 
-    focus = st.session_state.focus
+    focus = (
+        st.session_state.focus
+    )
 
 
     st.markdown(
@@ -2222,7 +2533,9 @@ elif st.session_state.page == "result":
 
 
     st.markdown(
-        f'<div class="step-title">{focus} 공명 결과</div>',
+        f'<div class="step-title">'
+        f'{focus} 공명 결과'
+        f'</div>',
         unsafe_allow_html=True,
     )
 
@@ -2241,36 +2554,38 @@ elif st.session_state.page == "result":
                 st.session_state.target_audio
             )
 
-
-        # =================================================
-        # 가슴
-        # =================================================
-
-        if focus == "가슴":
-
-            result = judge_chest(
+            result = judge_resonance(
+                focus,
                 baseline,
                 target
             )
 
 
-            score = result[
+        score = (
+            result[
                 "score"
             ]
+        )
 
 
-            score_text = (
-                f"+{score:.1f}%"
-                if score >= 0
-                else
-                f"{score:.1f}%"
-            )
+        score_text = (
+
+            f"+{score:.1f}%"
+
+            if score >= 0
+
+            else
+
+            f"{score:.1f}%"
+        )
 
 
-            # 1. 판정
+        # ---------------------------------------------
+        # 1. 판정
+        # ---------------------------------------------
 
-            st.markdown(
-                f"""
+        st.markdown(
+            f"""
 <div class="{result['css']}">
 
 <div class="result-title">
@@ -2287,47 +2602,34 @@ elif st.session_state.page == "result":
 
 </div>
 """,
-                unsafe_allow_html=True,
-            )
+            unsafe_allow_html=True,
+        )
 
 
-            # 2. 기준 / 현재
+        # ---------------------------------------------
+        # 2. 기준 vs 현재
+        # ---------------------------------------------
+
+        current_index = max(
+            0,
+            100 + score
+        )
+
+
+        st.markdown(
+            f"### {focus} 공명 변화 지수"
+        )
+
+
+        col1, col2 = (
+            st.columns(2)
+        )
+
+
+        with col1:
 
             st.markdown(
-                "### 가슴 공명 관련 울림"
-            )
-
-
-            baseline_low = (
-                baseline[
-                    "band_80_500"
-                ]
-            )
-
-
-            target_low = (
-                target[
-                    "band_80_500"
-                ]
-            )
-
-
-            difference_pp = (
-                target_low
-                -
-                baseline_low
-            )
-
-
-            col1, col2 = (
-                st.columns(2)
-            )
-
-
-            with col1:
-
-                st.markdown(
-                    f"""
+                """
 <div class="compare-card">
 
 <div class="compare-label">
@@ -2335,321 +2637,250 @@ elif st.session_state.page == "result":
 </div>
 
 <div class="compare-value">
-{baseline_low:.1f}%
+100
 </div>
 
 </div>
 """,
-                    unsafe_allow_html=True,
-                )
+                unsafe_allow_html=True,
+            )
 
 
-            with col2:
+        with col2:
 
-                change_class = (
-                    "compare-change-up"
-                    if difference_pp >= 0
-                    else
-                    "compare-change-down"
-                )
+            change_class = (
 
+                "compare-change-up"
 
-                arrow = (
-                    "↑"
-                    if difference_pp >= 0
-                    else
-                    "↓"
-                )
+                if score >= 0
+
+                else
+
+                "compare-change-down"
+            )
 
 
-                st.markdown(
-                    f"""
+            arrow = (
+
+                "↑"
+
+                if score >= 0
+
+                else
+
+                "↓"
+            )
+
+
+            st.markdown(
+                f"""
 <div class="compare-card">
 
 <div class="compare-label">
-가슴 공명 발성
+{focus} 공명 발성
 </div>
 
 <div class="compare-value">
-{target_low:.1f}%
+{current_index:.1f}
 </div>
 
 <div class="{change_class}">
-{arrow} {difference_pp:+.1f}%p
+{arrow} {score:+.1f}
 </div>
 
 </div>
 """,
-                    unsafe_allow_html=True,
-                )
-
-
-            # 3. 판단 근거
-
-            st.markdown(
-                "### 왜 이렇게 판단했나요?"
-            )
-
-
-            st.markdown(
-                '<div class="reason-box">',
                 unsafe_allow_html=True,
             )
 
 
-            if result["low_gain"] > 3:
+        # ---------------------------------------------
+        # 3. 근거
+        # ---------------------------------------------
 
-                st.write(
-                    "✅ 가슴 공명과 관련된 "
-                    f"저역 에너지 비율이 "
-                    f"**{result['low_gain']:.1f}% 증가**했습니다."
-                )
-
-
-            elif result["low_gain"] < -3:
-
-                st.write(
-                    "❌ 가슴 공명과 관련된 "
-                    f"저역 에너지 비율이 "
-                    f"**{abs(result['low_gain']):.1f}% 감소**했습니다."
-                )
+        model = (
+            MODELS[
+                focus
+            ]
+        )
 
 
-            else:
-
-                st.write(
-                    "➖ 가슴 관련 저역 에너지 변화가 크지 않습니다."
-                )
+        st.markdown(
+            "### 왜 이렇게 판단했나요?"
+        )
 
 
-            if result[
-                "centroid_change"
-            ] > 3:
-
-                st.write(
-                    "✅ 전체 소리의 에너지 중심도 낮은 쪽으로 이동했습니다."
-                )
+        st.markdown(
+            '<div class="reason-box">',
+            unsafe_allow_html=True,
+        )
 
 
-            elif result[
-                "centroid_change"
-            ] < -3:
-
-                st.write(
-                    "➖ 전체 소리의 에너지 중심은 높은 쪽으로 이동했습니다."
-                )
+        primary = (
+            result[
+                "primary"
+            ]
+        )
 
 
-            else:
-
-                st.write(
-                    "➖ 전체적인 음색 중심 변화는 크지 않습니다."
-                )
-
-
-            if np.isfinite(
-                result[
-                    "f0_change"
-                ]
-            ):
-
-                if (
-                    result["f0_change"]
-                    <=
-                    8
-                ):
-
-                    st.write(
-                        "✅ 두 발성의 음높이 차이가 "
-                        f"**{result['f0_change']:.1f}%**로 안정적입니다."
-                    )
+        secondary = (
+            result[
+                "secondary"
+            ]
+        )
 
 
-                elif (
-                    result["f0_change"]
-                    <=
-                    15
-                ):
+        primary_icon = (
 
-                    st.write(
-                        "⚠️ 두 발성의 음높이가 "
-                        f"**{result['f0_change']:.1f}%** 차이납니다."
-                    )
+            "✅"
 
+            if primary > 3
 
-                else:
+            else
 
-                    st.write(
-                        "⚠️ 두 발성의 음높이가 "
-                        f"**{result['f0_change']:.1f}%** 달라 "
-                        "공명 변화만으로 보기 어렵습니다."
-                    )
+            "❌"
+
+            if primary < -3
+
+            else
+
+            "➖"
+        )
 
 
-            st.markdown(
-                "</div>",
-                unsafe_allow_html=True,
-            )
+        secondary_icon = (
+
+            "✅"
+
+            if secondary > 3
+
+            else
+
+            "❌"
+
+            if secondary < -3
+
+            else
+
+            "➖"
+        )
 
 
-            # 4. 다음 발성
+        st.write(
+            primary_icon
+            +
+            f" **{model['primary_label']}** 변화: "
+            f"**{primary:+.1f}%**"
+        )
 
-            st.markdown(
-                "### 다음 발성에서 해볼 것"
-            )
 
+        st.write(
+            secondary_icon
+            +
+            f" **{model['secondary_label']}** 변화: "
+            f"**{secondary:+.1f}%**"
+        )
+
+
+        pitch_icon = (
+
+            "✅"
 
             if result[
-                "status"
-            ] == "good":
+                "confidence"
+            ] == "높음"
 
-                tip = (
-                    "지금 만든 울림의 느낌을 기억하세요. "
-                    "음높이를 유지하면서 같은 울림을 다시 재현해 보세요."
-                )
+            else
 
-
-            elif result[
-                "status"
-            ] == "mid":
-
-                tip = (
-                    "방향은 맞습니다. "
-                    "음을 낮추지 말고 가슴 쪽 울림을 조금 더 풍부하게 만들어 보세요."
-                )
+            "⚠️"
+        )
 
 
-            elif result[
-                "status"
-            ] == "retry":
-
-                tip = (
-                    "공명보다 음높이가 많이 달라졌습니다. "
-                    "기준 발성과 같은 높이의 /아/로 다시 시도해 보세요."
-                )
-
-
-            elif result[
-                "status"
-            ] == "neutral":
-
-                tip = (
-                    "기준 발성과 같은 높이를 유지하면서 "
-                    "가슴 쪽에서 느껴지는 진동을 조금 더 확장해 보세요."
-                )
+        st.write(
+            pitch_icon
+            +
+            " "
+            +
+            result[
+                "confidence_msg"
+            ]
+        )
 
 
-            else:
-
-                tip = (
-                    "음을 낮추려고 하지 말고 "
-                    "기준 발성의 높이를 유지한 채 가슴 울림을 다시 찾아보세요."
-                )
+        st.markdown(
+            "</div>",
+            unsafe_allow_html=True,
+        )
 
 
-            st.markdown(
-                f"""
+        # ---------------------------------------------
+        # 4. 신뢰도
+        # ---------------------------------------------
+
+        st.markdown(
+            "### 결과 신뢰도"
+        )
+
+
+        st.markdown(
+            f"""
+<div class="confidence-box">
+
+<b>{result['confidence']}</b><br>
+
+음높이 차이는 결과를 막는 조건이 아니라
+결과 신뢰도를 판단하는 데만 사용합니다.
+
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+
+
+        # ---------------------------------------------
+        # 5. 다음 발성
+        # ---------------------------------------------
+
+        st.markdown(
+            "### 다음 발성에서 해볼 것"
+        )
+
+
+        st.markdown(
+            f"""
 <div class="tip-box">
-{tip}
+{result['tip']}
 </div>
 """,
-                unsafe_allow_html=True,
+            unsafe_allow_html=True,
+        )
+
+
+        # ---------------------------------------------
+        # 6. 연구자
+        # ---------------------------------------------
+
+        with st.expander(
+            "연구자용 상세 데이터"
+        ):
+
+            st.write(
+                f"선택 공명: {focus}"
             )
 
 
-            # 5. 연구자
-
-            with st.expander(
-                "연구자용 상세 데이터"
-            ):
-
-                st.write(
-                    f"기준 F0 : "
-                    f"{baseline['f0']:.1f} Hz"
-                )
-
-
-                st.write(
-                    f"훈련 F0 : "
-                    f"{target['f0']:.1f} Hz"
-                )
-
-
-                st.write(
-                    f"음높이 차이 : "
-                    f"{result['f0_change']:.2f}%"
-                )
-
-
-                st.write(
-                    f"기준 80–500 Hz : "
-                    f"{baseline['band_80_500']:.2f}%"
-                )
-
-
-                st.write(
-                    f"훈련 80–500 Hz : "
-                    f"{target['band_80_500']:.2f}%"
-                )
-
-
-                st.write(
-                    f"저역 변화율 : "
-                    f"{result['low_gain']:+.2f}%"
-                )
-
-
-                st.write(
-                    f"기준 Spectral Centroid : "
-                    f"{baseline['centroid']:.1f} Hz"
-                )
-
-
-                st.write(
-                    f"훈련 Spectral Centroid : "
-                    f"{target['centroid']:.1f} Hz"
-                )
-
-
-                st.write(
-                    f"Centroid 변화 : "
-                    f"{result['centroid_change']:+.2f}%"
-                )
-
-
-                st.write(
-                    f"가슴 공명 변화 지수 : "
-                    f"{result['score']:+.2f}"
-                )
-
-
-        # =================================================
-        # 나머지 공명
-        # =================================================
-
-        else:
-
-            st.markdown(
-                f"""
-<div class="result-info">
-
-<div class="result-title">
-{focus} 공명 데이터 기록 완료
-</div>
-
-<div class="result-description">
-현재 {focus} 공명은 판정 기준을 구축하는 단계입니다.
-충분한 근거가 확보되기 전에는 성공 여부를 임의로 판정하지 않습니다.
-</div>
-
-</div>
-""",
-                unsafe_allow_html=True,
+            st.write(
+                f"기준 F0: "
+                f"{baseline['f0']:.1f} Hz"
+                f" / "
+                f"훈련 F0: "
+                f"{target['f0']:.1f} Hz"
             )
 
 
-            st.markdown(
-                "### 기준 발성 대비 변화"
+            st.write(
+                f"음높이 차이: "
+                f"{result['f0_change']:.2f}%"
             )
 
 
@@ -2679,48 +2910,49 @@ elif st.session_state.page == "result":
 
             for label, key in bands:
 
-                change = (
-                    target[key]
-                    -
-                    baseline[key]
-                )
-
-
                 st.write(
-                    f"**{label}** : "
-                    f"{change:+.1f}%p"
+                    f"{label} · "
+                    f"기준 "
+                    f"{baseline[key]:.2f}%"
+                    f" / "
+                    f"훈련 "
+                    f"{target[key]:.2f}%"
+                    f" / "
+                    f"변화 "
+                    f"{target[key] - baseline[key]:+.2f}%p"
                 )
 
 
-            with st.expander(
-                "연구자용 상세 데이터"
-            ):
-
-                st.write(
-                    f"기준 F0 : "
-                    f"{baseline['f0']:.1f} Hz"
-                )
-
-
-                st.write(
-                    f"훈련 F0 : "
-                    f"{target['f0']:.1f} Hz"
-                )
+            st.write(
+                f"Spectral Centroid · "
+                f"기준 "
+                f"{baseline['centroid']:.1f} Hz"
+                f" / "
+                f"훈련 "
+                f"{target['centroid']:.1f} Hz"
+            )
 
 
-                for label, key in bands:
-
-                    st.write(
-                        f"{label} / 기준 "
-                        f"{baseline[key]:.2f}% / "
-                        f"훈련 "
-                        f"{target[key]:.2f}%"
-                    )
+            st.write(
+                f"1차 {focus} 공명 변화 지수: "
+                f"{result['score']:+.2f}"
+            )
 
 
-        # =================================================
+            st.caption(
+                "현재 5개 공명 판정식은 "
+                "개인 기준 발성 대비 상대 변화로 만든 "
+                "1차 휴리스틱입니다. "
+                "특히 입천장·비강·두개골은 "
+                "독립적인 표준 음향 지표로 확정된 분류가 아니므로, "
+                "교수자 청지각 테스트 결과에 따라 "
+                "가중치와 임계값을 조정해야 합니다."
+            )
+
+
+        # ---------------------------------------------
         # BUTTONS
-        # =================================================
+        # ---------------------------------------------
 
         st.divider()
 
