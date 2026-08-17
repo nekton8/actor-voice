@@ -5,3 +5,4 @@ pandas
 requests
 praat-parselmouth
 plotly
+audio-recorder-streamlit
