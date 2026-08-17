@@ -3,8 +3,6 @@ import librosa
 import numpy as np
 import plotly.graph_objects as go
 import parselmouth
-from audio_recorder_streamlit import audio_recorder
-import time
 
 # 1. 페이지 기본 설정 및 디자인
 st.set_page_config(page_title="연기 발성 5대 공명 진단 시스템", page_icon="🎙️", layout="centered")
@@ -15,7 +13,6 @@ st.markdown("""
     .sub-title { font-size: 0.95rem; color: #666666; text-align: center; margin-bottom: 25px; }
     .guide-card { background-color: #F0F4F8; padding: 20px; border-radius: 12px; border-left: 6px solid #1F77B4; margin-bottom: 20px; }
     .step-header { font-size: 1.2rem; font-weight: 600; color: #0F4C81; margin-bottom: 10px; }
-    .timer-text { font-size: 1.5rem; font-weight: 700; color: #D9534F; text-align: center; margin: 15px 0; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -54,40 +51,31 @@ if st.session_state.step == 1:
         st.rerun()
 
 # ==========================================
-# PAGE 2: 녹음 가이드, 5초 타임 녹음 및 들어보기
+# PAGE 2: 녹음 가이드, 실시간 초 표시 녹음
 # ==========================================
 elif st.session_state.step == 2:
-    st.markdown('<div class="step-header">STEP 2. 발성 녹음 진행 (5초 자동 녹음)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-header">STEP 2. 발성 녹음 진행 (실시간 초 표시)</div>', unsafe_allow_html=True)
     
     st.markdown("""
         <div class="guide-card">
             <b>📌 정확한 분석을 위한 3가지 수칙</b><br><br>
             1. <b>마이크 거리:</b> 스마트폰/마이크를 입에서 <b>주먹 하나 거리(약 15cm)</b> 띄우세요.<br>
             2. <b>발성 방법:</b> 가장 편안한 톤으로 <b>"에---"</b> 소리를 끊기지 않게 일정하게 내세요.<br>
-            3. <b>녹음 시간:</b> 녹음 버튼을 누르고 <b>5초간</b> 소리를 일정하게 유지해 주세요.
+            3. <b>녹음 시간:</b> 녹음 버튼을 누르고 화면의 타이머가 <b>5초</b>가 될 때까지 소리를 유지한 후 중지하세요.
         </div>
     """, unsafe_allow_html=True)
 
-    st.subheader("🎙️ 5초 녹음 진행")
-    st.caption("아래 마이크 버튼을 클릭한 뒤 바로 '에---' 발성을 시작해 주세요.")
+    st.subheader("🎙️ 실시간 마이크 녹음")
+    st.caption("빨간색 녹음 버튼을 누르면 실시간 진행 시간(초)이 표시됩니다.")
     
-    # 마이크 녹음 위젯
-    recorded_audio = audio_recorder(
-        text="버튼을 누르면 녹음이 시작됩니다 (5초)",
-        recording_color="#e8b62c",
-        neutral_color="#1F77B4",
-        icon_name="microphone",
-        icon_size="3x",
-    )
+    # Streamlit 내장 실시간 타이머 녹음 위젯 (st.audio_input)
+    recorded_audio = st.audio_input("마이크 녹음")
 
-    # 녹음 데이터 입력 시 수신
     if recorded_audio:
-        st.session_state.audio_bytes = recorded_audio
+        st.session_state.audio_bytes = recorded_audio.read()
 
-    # 녹음 완료 후 들어보기 및 다음 단계
     if st.session_state.audio_bytes is not None:
-        st.success("✅ 5초 녹음이 완성되었습니다! 아래에서 미리 들어보실 수 있습니다.")
-        st.audio(st.session_state.audio_bytes, format="audio/wav")
+        st.success("✅ 녹음이 완료되었습니다! 아래 버튼을 눌러 바로 분석할 수 있습니다.")
         
         col1, col2 = st.columns(2)
         with col1:
