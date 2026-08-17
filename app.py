@@ -53,24 +53,24 @@ if st.session_state.step == 1:
         st.rerun()
 
 # ==========================================
-# PAGE 2: 5초 대형 빨간 버튼 카운트다운 녹음
+# PAGE 2: 5초 동기화 정밀 녹음
 # ==========================================
 elif st.session_state.step == 2:
-    st.markdown('<div class="step-header">STEP 2. 발성 녹음 진행 (5초 자동 카운트다운)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-header">STEP 2. 발성 녹음 진행 (5초 정밀 녹음)</div>', unsafe_allow_html=True)
     
     st.markdown("""
         <div class="guide-card">
             <b>📌 정확한 분석을 위한 3가지 수칙</b><br><br>
             1. <b>마이크 거리:</b> 스마트폰/마이크를 입에서 <b>주먹 하나 거리(약 15cm)</b> 띄우세요.<br>
             2. <b>발성 방법:</b> 가장 편안한 톤으로 <b>"에---"</b> 소리를 끊기지 않게 일정하게 내세요.<br>
-            3. <b>녹음 시간:</b> 빨간 버튼을 누르면 <b>5초 카운트다운 후 자동으로 녹음이 종료</b>됩니다.
+            3. <b>녹음 시간:</b> 버튼을 누르면 <b>5초간 전체 음성이 수신된 후 녹음이 종료</b>됩니다.
         </div>
     """, unsafe_allow_html=True)
 
     st.subheader("🎙️ 5초 자동 녹음")
-    st.caption("아래 빨간색 원형 버튼을 클릭하면 5초 카운트다운이 시작됩니다.")
+    st.caption("아래 빨간색 원형 버튼을 클릭하면 5초 카운트다운과 함께 녹음됩니다.")
 
-    # 안정화된 5초 카운트다운 웹 컴포넌트
+    # 5초 동기화 정밀 녹음 컴포넌트
     custom_recorder_code = """
     <div style="text-align: center; padding: 10px; font-family: sans-serif;">
         <button id="recBtn" onclick="startRec()" style="
@@ -106,23 +106,34 @@ elif st.session_state.step == 2:
         
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
+            
+            // mimeType 지정 및 타임슬라이스 설정으로 동기화 개선
+            let options = { mimeType: 'audio/webm' };
+            if (!MediaRecorder.isTypeSupported('audio/webm')) {
+                options = {};
+            }
+            
+            mediaRecorder = new MediaRecorder(stream, options);
             chunks = [];
 
-            mediaRecorder.ondataavailable = e => chunks.push(e.data);
+            mediaRecorder.ondataavailable = e => {
+                if (e.data.size > 0) chunks.push(e.data);
+            };
             
             mediaRecorder.onstop = () => {
-                const blob = new Blob(chunks, { type: 'audio/wav' });
+                const blob = new Blob(chunks, { type: mediaRecorder.mimeType || 'audio/wav' });
                 const reader = new FileReader();
                 reader.onloadend = () => {
-                    const base64data = reader.result; // data:audio/wav;base64,... 전체 전달
+                    const base64data = reader.result;
                     window.parent.postMessage({ type: 'streamlit:setComponentValue', value: base64data }, '*');
                 };
                 reader.readAsDataURL(blob);
                 stream.getTracks().forEach(track => track.stop());
             };
 
-            mediaRecorder.start();
+            // 100ms 간격으로 데이터 청크 수집
+            mediaRecorder.start(100);
+            
             btn.disabled = true;
             btn.style.backgroundColor = '#7F8C8D';
             btn.style.borderColor = '#95A5A6';
@@ -153,19 +164,19 @@ elif st.session_state.step == 2:
 
     rec_val = components.html(custom_recorder_code, height=230)
 
-    # 파이썬 수신부 예외처리 강화
+    # 파이썬 수신부
     if rec_val and isinstance(rec_val, str) and "base64," in rec_val:
         try:
             base64_str = rec_val.split("base64,")[1]
             st.session_state.audio_bytes = base64.b64decode(base64_str)
             st.rerun()
         except Exception as e:
-            st.error(f"오디오 변환 예외: {e}")
+            st.error(f"오디오 데이터 처리 중 오류: {e}")
 
-    # 녹음 데이터 존재 시 들어보기 플레이어 및 버튼 표출
+    # 녹음 완료 시 플레이어 및 버튼 표출
     if st.session_state.audio_bytes is not None:
         st.write("")
-        st.success("✅ 5초 녹음이 완성되었습니다! 아래에서 미리 들어보실 수 있습니다.")
+        st.success("✅ 5초 녹음이 성공적으로 완성되었습니다! 미리 들어보실 수 있습니다.")
         st.audio(st.session_state.audio_bytes, format="audio/wav")
         
         st.write("")
