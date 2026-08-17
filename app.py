@@ -13,30 +13,47 @@ st.set_page_config(
     layout="centered",
 )
 
+# =========================================================
+# STYLE
+# =========================================================
+
 st.markdown(
     """
 <style>
+
 .block-container {
     max-width: 860px;
     padding-top: 2rem;
     padding-bottom: 4rem;
 }
+
 .main-title {
     font-size: 2.15rem;
     font-weight: 800;
     letter-spacing: -0.03em;
-    margin-bottom: 0.2rem;
+    margin-bottom: 0.25rem;
 }
+
 .sub-title {
     font-size: 1rem;
     color: #666;
     margin-bottom: 1.6rem;
 }
+
 .small-note {
-    font-size: .9rem;
-    color: #777;
-    line-height: 1.55;
+    font-size: 0.95rem;
+    color: #666;
+    line-height: 1.65;
+    margin-bottom: 1rem;
 }
+
+.step-box {
+    padding: 18px 20px;
+    border-radius: 12px;
+    background: #f7f8fa;
+    margin-bottom: 20px;
+}
+
 </style>
 """,
     unsafe_allow_html=True,
@@ -54,7 +71,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-
 # =========================================================
 # SESSION STATE
 # =========================================================
@@ -62,6 +78,8 @@ st.markdown(
 DEFAULTS = {
     "baseline_audio": None,
     "target_audio": None,
+    "step": 1,
+    "focus": "가슴",
 }
 
 for key, value in DEFAULTS.items():
@@ -84,7 +102,6 @@ def safe_median(arr):
 
 
 def spectral_slope(y, sr):
-
     spectrum = np.abs(
         librosa.stft(
             y,
@@ -113,10 +130,7 @@ def spectral_slope(y, sr):
         return np.nan
 
     x = freqs[mask] / 1000.0
-
-    y_db = 20 * np.log10(
-        mean_spectrum[mask]
-    )
+    y_db = 20 * np.log10(mean_spectrum[mask])
 
     slope, _ = np.polyfit(
         x,
@@ -133,7 +147,6 @@ def band_ratio(
     low_frequency,
     high_frequency
 ):
-
     mask = (
         (freqs >= low_frequency)
         &
@@ -162,7 +175,6 @@ def band_ratio(
 
 
 def analyze_audio(audio_bytes):
-
     if not audio_bytes:
         raise ValueError(
             "녹음 데이터가 없습니다."
@@ -176,9 +188,9 @@ def analyze_audio(audio_bytes):
         tmp.write(audio_bytes)
         tmp.flush()
 
-        # -------------------------------------------------
-        # AUDIO LOAD
-        # -------------------------------------------------
+        # -----------------------------
+        # LOAD
+        # -----------------------------
 
         y, sr = librosa.load(
             tmp.name,
@@ -192,7 +204,6 @@ def analyze_audio(audio_bytes):
         )
 
         if len(y) < int(sr * 0.5):
-
             raise ValueError(
                 "유효한 음성이 너무 짧습니다. "
                 "2~4초 정도 길게 발성해 주세요."
@@ -200,17 +211,17 @@ def analyze_audio(audio_bytes):
 
         y = librosa.util.normalize(y)
 
-        # -------------------------------------------------
-        # PRAAT SOUND
-        # -------------------------------------------------
+        # -----------------------------
+        # PRAAT
+        # -----------------------------
 
         sound = parselmouth.Sound(
             tmp.name
         )
 
-        # -------------------------------------------------
+        # -----------------------------
         # F0
-        # -------------------------------------------------
+        # -----------------------------
 
         pitch = sound.to_pitch_ac(
             time_step=0.0,
@@ -233,9 +244,9 @@ def analyze_audio(audio_bytes):
             f0_values
         )
 
-        # -------------------------------------------------
+        # -----------------------------
         # FORMANTS
-        # -------------------------------------------------
+        # -----------------------------
 
         if (
             np.isfinite(f0)
@@ -301,9 +312,9 @@ def analyze_audio(audio_bytes):
             ):
                 f3_values.append(f3)
 
-        # -------------------------------------------------
+        # -----------------------------
         # SPECTRUM
-        # -------------------------------------------------
+        # -----------------------------
 
         spectrum = np.abs(
             librosa.stft(
@@ -327,10 +338,6 @@ def analyze_audio(audio_bytes):
                 n_fft=2048
             )
         )
-
-        # -------------------------------------------------
-        # SPECTRAL FEATURES
-        # -------------------------------------------------
 
         centroid = float(
             np.mean(
@@ -380,10 +387,6 @@ def analyze_audio(audio_bytes):
             sr
         )
 
-        # -------------------------------------------------
-        # HNR
-        # -------------------------------------------------
-
         harmonicity = (
             sound
             .to_harmonicity_cc(
@@ -406,84 +409,48 @@ def analyze_audio(audio_bytes):
         else:
             hnr = np.nan
 
-        # -------------------------------------------------
-        # RETURN
-        # -------------------------------------------------
-
         return {
+            "duration": float(len(y) / sr),
 
-            "duration":
-                float(
-                    len(y) / sr
-                ),
+            "f0": f0,
+            "f1": safe_median(f1_values),
+            "f2": safe_median(f2_values),
+            "f3": safe_median(f3_values),
 
-            "f0":
-                f0,
+            "centroid": centroid,
+            "rolloff": rolloff,
+            "flatness": flatness,
+            "rms": rms,
+            "slope": slope,
+            "hnr": hnr,
 
-            "f1":
-                safe_median(
-                    f1_values
-                ),
+            "low": band_ratio(
+                mean_power,
+                freqs,
+                80,
+                500
+            ),
 
-            "f2":
-                safe_median(
-                    f2_values
-                ),
+            "low_mid": band_ratio(
+                mean_power,
+                freqs,
+                500,
+                1500
+            ),
 
-            "f3":
-                safe_median(
-                    f3_values
-                ),
+            "mid_high": band_ratio(
+                mean_power,
+                freqs,
+                1500,
+                3000
+            ),
 
-            "centroid":
-                centroid,
-
-            "rolloff":
-                rolloff,
-
-            "flatness":
-                flatness,
-
-            "rms":
-                rms,
-
-            "slope":
-                slope,
-
-            "hnr":
-                hnr,
-
-            "low":
-                band_ratio(
-                    mean_power,
-                    freqs,
-                    80,
-                    500
-                ),
-
-            "low_mid":
-                band_ratio(
-                    mean_power,
-                    freqs,
-                    500,
-                    1500
-                ),
-
-            "mid_high":
-                band_ratio(
-                    mean_power,
-                    freqs,
-                    1500,
-                    3000
-                ),
-
-            "high":
-                band_ratio(
-                    mean_power,
-                    freqs,
-                    3000,
-                    5000
-                ),
+            "high": band_ratio(
+                mean_power,
+                freqs,
+                3000,
+                5000
+            ),
         }
 
 
@@ -491,7 +458,6 @@ def percent_change(
     baseline,
     target
 ):
-
     if (
         baseline is None
         or target is None
@@ -512,7 +478,6 @@ def absolute_change(
     baseline,
     target
 ):
-
     if (
         baseline is None
         or target is None
@@ -521,10 +486,7 @@ def absolute_change(
     ):
         return np.nan
 
-    return (
-        target
-        - baseline
-    )
+    return target - baseline
 
 
 def format_value(
@@ -532,7 +494,6 @@ def format_value(
     unit="",
     digits=1
 ):
-
     if (
         value is None
         or not np.isfinite(value)
@@ -550,7 +511,6 @@ def delta_text(
     unit="",
     digits=1
 ):
-
     if (
         value is None
         or not np.isfinite(value)
@@ -571,244 +531,212 @@ def delta_text(
 
 
 # =========================================================
-# TRAINING TARGET
+# STEP 1 : 기준 발성
 # =========================================================
 
-focus = st.selectbox(
+if st.session_state.step == 1:
 
-    "이번에 훈련할 공명 초점",
-
-    [
-        "가슴",
-        "입천장",
-        "이빨·전방",
-        "비강",
-        "두개골",
-    ],
-
-    help=(
-        "현재 단계에서는 이 선택 자체가 "
-        "점수 계산에 영향을 주지 않습니다. "
-        "어떤 공명을 의도했는지 기록하기 위한 "
-        "연구용 라벨입니다."
-    ),
-)
-
-
-with st.expander(
-    "녹음 방법"
-):
+    st.markdown(
+        "### STEP 1. 내 기준 발성"
+    )
 
     st.markdown(
         """
-- 같은 모음 **/아/** 로 2~4초 정도 발성합니다.
-- 두 번의 녹음에서 음높이를 일부러 바꾸지 않습니다.
-- 음량도 최대한 비슷하게 유지합니다.
-- 같은 기기와 같은 거리에서 녹음합니다.
-- 첫 번째는 편안하게 발성합니다.
-- 두 번째는 선택한 공명만 의도적으로 강조합니다.
-"""
-    )
+<div class="step-box">
 
+<b>녹음 방법</b><br><br>
 
-# =========================================================
-# STEP 1
-# =========================================================
+특정 공명을 만들려고 하지 말고<br>
+가장 편안하고 자연스러운 <b>/아/</b>를<br>
+2~4초 정도 유지하세요.<br><br>
 
-st.markdown(
-    "### STEP 1. 내 기준 발성"
-)
-
-st.markdown(
-
-    """
-<div class="small-note">
-
-특정 공명을 만들려고 하지 말고  
-가장 편안하고 자연스러운 <b>/아/</b>를  
-2~4초 정도 유지하세요.
+두 번째 발성과 비교하기 위해<br>
+평소 자신의 자연스러운 발성을 기준으로 저장합니다.
 
 </div>
 """,
+        unsafe_allow_html=True,
+    )
 
-    unsafe_allow_html=True,
-)
+    baseline_recording = audio_recorder(
+        text="",
+        recording_color="#e74c3c",
+        neutral_color="#444444",
+        icon_name="microphone",
+        icon_size="2x",
+        key="baseline_recorder",
+    )
 
-
-baseline_recording = audio_recorder(
-
-    text="",
-
-    recording_color="#e74c3c",
-
-    neutral_color="#444444",
-
-    icon_name="microphone",
-
-    icon_size="2x",
-
-    key="baseline_recorder",
-)
-
-
-if baseline_recording:
-
-    st.session_state.baseline_audio = (
-        bytes(
+    if baseline_recording:
+        st.session_state.baseline_audio = bytes(
             baseline_recording
         )
-    )
 
+    if st.session_state.baseline_audio:
 
-if st.session_state.baseline_audio:
+        st.markdown("#### 녹음 확인")
 
-    st.audio(
-        st.session_state.baseline_audio,
-        format="audio/wav"
-    )
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-
-        if st.button(
-            "기준 발성 다시 녹음",
-            use_container_width=True
-        ):
-
-            st.session_state.baseline_audio = None
-
-            st.rerun()
-
-    with col2:
-
-        st.success(
-            "기준 발성 저장 완료"
+        st.audio(
+            st.session_state.baseline_audio,
+            format="audio/wav"
         )
 
+        st.success(
+            "기준 발성 녹음이 완료되었습니다."
+        )
 
-st.divider()
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            if st.button(
+                "🔄 다시 녹음",
+                use_container_width=True
+            ):
+                st.session_state.baseline_audio = None
+                st.rerun()
+
+        with col2:
+
+            if st.button(
+                "다음 단계 ➡️",
+                type="primary",
+                use_container_width=True
+            ):
+                st.session_state.step = 2
+                st.rerun()
 
 
 # =========================================================
-# STEP 2
+# STEP 2 : 공명 선택 + 훈련 발성
 # =========================================================
 
-st.markdown(
-    f"### STEP 2. {focus} 공명 발성"
-)
+elif st.session_state.step == 2:
 
-st.markdown(
+    st.markdown(
+        "### STEP 2. 훈련 공명 선택"
+    )
 
-    """
-<div class="small-note">
+    focus = st.selectbox(
+        "이번에 훈련할 공명",
+        [
+            "가슴",
+            "입천장",
+            "이빨·전방",
+            "비강",
+            "두개골",
+        ],
+        index=[
+            "가슴",
+            "입천장",
+            "이빨·전방",
+            "비강",
+            "두개골",
+        ].index(
+            st.session_state.focus
+        )
+    )
 
-STEP 1과 같은 모음과 비슷한 음높이·음량을 유지하세요.  
-이번에는 선택한 공명 위치만 의도적으로 강조합니다.
+    st.session_state.focus = focus
+
+    st.markdown(
+        f"""
+<div class="step-box">
+
+<b>{focus} 공명 발성</b><br><br>
+
+STEP 1과 같은 <b>/아/</b>를 사용합니다.<br>
+음높이와 음량은 가능한 비슷하게 유지하세요.<br><br>
+
+이번에는 <b>{focus} 공명</b>을 의도적으로 강조해서<br>
+2~4초 정도 발성합니다.
 
 </div>
 """,
+        unsafe_allow_html=True,
+    )
 
-    unsafe_allow_html=True,
-)
+    target_recording = audio_recorder(
+        text="",
+        recording_color="#e74c3c",
+        neutral_color="#444444",
+        icon_name="microphone",
+        icon_size="2x",
+        key="target_recorder",
+    )
 
-
-target_recording = audio_recorder(
-
-    text="",
-
-    recording_color="#e74c3c",
-
-    neutral_color="#444444",
-
-    icon_name="microphone",
-
-    icon_size="2x",
-
-    key="target_recorder",
-)
-
-
-if target_recording:
-
-    st.session_state.target_audio = (
-        bytes(
+    if target_recording:
+        st.session_state.target_audio = bytes(
             target_recording
         )
-    )
 
+    if st.session_state.target_audio:
 
-if st.session_state.target_audio:
+        st.markdown("#### 녹음 확인")
 
-    st.audio(
-        st.session_state.target_audio,
-        format="audio/wav"
-    )
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-
-        if st.button(
-            "훈련 발성 다시 녹음",
-            use_container_width=True
-        ):
-
-            st.session_state.target_audio = None
-
-            st.rerun()
-
-    with col2:
-
-        st.success(
-            "훈련 발성 저장 완료"
+        st.audio(
+            st.session_state.target_audio,
+            format="audio/wav"
         )
 
+        st.success(
+            f"{focus} 공명 발성 녹음이 완료되었습니다."
+        )
 
-st.divider()
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            if st.button(
+                "🔄 다시 녹음",
+                use_container_width=True
+            ):
+                st.session_state.target_audio = None
+                st.rerun()
+
+        with col2:
+
+            if st.button(
+                "📊 분석 결과 보기",
+                type="primary",
+                use_container_width=True
+            ):
+                st.session_state.step = 3
+                st.rerun()
+
+    st.write("")
+
+    if st.button(
+        "⬅️ 기준 발성 다시 녹음"
+    ):
+        st.session_state.baseline_audio = None
+        st.session_state.target_audio = None
+        st.session_state.step = 1
+        st.rerun()
 
 
 # =========================================================
-# ANALYSIS BUTTON
+# STEP 3 : 분석 결과
 # =========================================================
 
-ready = (
+elif st.session_state.step == 3:
 
-    st.session_state.baseline_audio
-    is not None
+    focus = st.session_state.focus
 
-    and
+    if (
+        st.session_state.baseline_audio is None
+        or st.session_state.target_audio is None
+    ):
+        st.warning(
+            "녹음 데이터가 없습니다. 처음부터 다시 진행합니다."
+        )
 
-    st.session_state.target_audio
-    is not None
-)
+        st.session_state.step = 1
+        st.rerun()
 
-
-analyze_clicked = st.button(
-
-    "📊 두 발성 비교 분석",
-
-    type="primary",
-
-    use_container_width=True,
-
-    disabled=not ready,
-)
-
-
-if not ready:
-
-    st.info(
-        "기준 발성과 훈련 발성을 모두 녹음하면 "
-        "비교 분석을 시작할 수 있습니다."
+    st.markdown(
+        "### STEP 3. 분석 결과"
     )
-
-
-# =========================================================
-# ANALYSIS RESULT
-# =========================================================
-
-if analyze_clicked:
 
     try:
 
@@ -824,22 +752,22 @@ if analyze_clicked:
                 st.session_state.target_audio
             )
 
-
-        st.markdown(
-            "## 분석 결과"
+        st.success(
+            "분석이 완료되었습니다."
         )
 
-
         st.caption(
+            f"이번 분석 대상: {focus} 공명"
+        )
 
+        st.info(
             """
-현재 버전은 특정 공명을 몇 점이라고 단정하지 않습니다.
+현재 버전은 특정 공명을 임의의 점수로 단정하지 않습니다.
 
-자신의 기준 발성과 비교했을 때  
+자신의 기준 발성과 비교했을 때
 어떤 음향적 변화가 나타났는지를 분석합니다.
 """
         )
-
 
         # =================================================
         # CORE METRICS
@@ -849,52 +777,43 @@ if analyze_clicked:
             "### 1. 핵심 음향 변화"
         )
 
-
         metrics = [
-
             (
                 "기본주파수 F0",
                 "f0",
                 " Hz"
             ),
-
             (
                 "제1포먼트 F1",
                 "f1",
                 " Hz"
             ),
-
             (
                 "제2포먼트 F2",
                 "f2",
                 " Hz"
             ),
-
             (
                 "제3포먼트 F3",
                 "f3",
                 " Hz"
             ),
-
             (
                 "스펙트럼 중심",
                 "centroid",
                 " Hz"
             ),
-
             (
                 "HNR",
                 "hnr",
                 " dB"
             ),
-
             (
                 "스펙트럼 기울기",
                 "slope",
                 " dB/kHz"
             ),
         ]
-
 
         for i in range(
             0,
@@ -919,19 +838,15 @@ if analyze_clicked:
                 with column:
 
                     st.metric(
-
                         label,
-
                         format_value(
                             target[key],
                             unit
                         ),
-
                         delta=delta_text(
                             difference,
                             unit
                         ),
-
                         help=(
                             "기준 발성: "
                             + format_value(
@@ -941,7 +856,6 @@ if analyze_clicked:
                         ),
                     )
 
-
         # =================================================
         # BAND ENERGY
         # =================================================
@@ -950,80 +864,49 @@ if analyze_clicked:
             "### 2. 주파수대 에너지 분포 변화"
         )
 
-
         band_labels = [
-
             "80–500",
-
             "500–1500",
-
             "1500–3000",
-
             "3000–5000",
         ]
 
-
         band_keys = [
-
             "low",
-
             "low_mid",
-
             "mid_high",
-
             "high",
         ]
 
-
         baseline_values = [
-
             baseline[key]
-
-            for key
-            in band_keys
+            for key in band_keys
         ]
-
 
         target_values = [
-
             target[key]
-
-            for key
-            in band_keys
+            for key in band_keys
         ]
-
 
         figure = go.Figure()
 
-
         figure.add_trace(
-
             go.Bar(
-
                 name="기준 발성",
-
                 x=band_labels,
-
                 y=baseline_values,
             )
         )
 
-
         figure.add_trace(
-
             go.Bar(
-
-                name=f"{focus} 훈련 발성",
-
+                name=f"{focus} 공명 발성",
                 x=band_labels,
-
                 y=target_values,
             )
         )
 
-
         figure.update_layout(
-
             barmode="group",
 
             xaxis_title=(
@@ -1048,52 +931,39 @@ if analyze_clicked:
             ),
         )
 
-
         st.plotly_chart(
             figure,
             use_container_width=True
         )
 
-
         # =================================================
-        # DELTA GRAPH
+        # DELTA
         # =================================================
 
         st.markdown(
             "### 3. 기준 발성 대비 변화"
         )
 
-
         delta_values = [
-
             absolute_change(
                 baseline[key],
                 target[key]
             )
-
-            for key
-            in band_keys
+            for key in band_keys
         ]
 
-
         delta_figure = go.Figure(
-
             go.Bar(
-
                 x=band_labels,
-
                 y=delta_values,
             )
         )
-
 
         delta_figure.add_hline(
             y=0
         )
 
-
         delta_figure.update_layout(
-
             xaxis_title=(
                 "주파수 대역 (Hz)"
             ),
@@ -1112,12 +982,10 @@ if analyze_clicked:
             height=330,
         )
 
-
         st.plotly_chart(
             delta_figure,
             use_container_width=True
         )
-
 
         # =================================================
         # QUALITY CONTROL
@@ -1127,42 +995,26 @@ if analyze_clicked:
             "### 4. 비교 조건 확인"
         )
 
-
         f0_difference = abs(
-
             percent_change(
-
                 baseline["f0"],
-
                 target["f0"]
             )
         )
 
-
         duration_difference = abs(
-
             baseline["duration"]
-
             - target["duration"]
         )
 
-
         if (
-
-            np.isfinite(
-                f0_difference
-            )
-
-            and
-
-            f0_difference <= 12
+            np.isfinite(f0_difference)
+            and f0_difference <= 12
         ):
 
             st.success(
-
                 "두 발성의 기본음 높이 차이: "
                 f"약 {f0_difference:.1f}%"
-
                 " — 비교에 무리가 크지 않습니다."
             )
 
@@ -1173,10 +1025,8 @@ if analyze_clicked:
             ):
 
                 st.warning(
-
                     "두 발성의 기본음 높이 차이가 "
                     f"약 {f0_difference:.1f}%입니다.\n\n"
-
                     "공명 변화와 음높이 변화가 함께 "
                     "반영되었을 가능성이 있습니다."
                 )
@@ -1184,33 +1034,27 @@ if analyze_clicked:
             else:
 
                 st.warning(
-
                     "기본주파수를 안정적으로 "
                     "측정하지 못했습니다."
                 )
 
-
         if duration_difference > 1.5:
 
             st.warning(
-
                 "두 녹음의 길이 차이가 큽니다. "
                 "다음 측정에서는 비슷한 길이로 "
                 "녹음해 주세요."
             )
-
 
         # =================================================
         # INTERPRETATION
         # =================================================
 
         st.markdown(
-            "### 연구용 해석"
+            "### 5. 연구용 해석"
         )
 
-
         st.info(
-
             f"""
 이번 측정은 **{focus} 공명 훈련을 했을 때**
 자신의 기준 발성에서 어떤 음향 변화가 나타났는지를 기록한 것입니다.
@@ -1224,7 +1068,6 @@ if analyze_clicked:
 """
         )
 
-
         # =================================================
         # RAW DATA
         # =================================================
@@ -1234,7 +1077,6 @@ if analyze_clicked:
         ):
 
             metric_names = {
-
                 "f0":
                     "F0 (Hz)",
 
@@ -1278,11 +1120,9 @@ if analyze_clicked:
                     "3000–5000 (%)",
             }
 
-
             for key, label in metric_names.items():
 
                 baseline_value = baseline[key]
-
                 target_value = target[key]
 
                 difference = absolute_change(
@@ -1291,34 +1131,37 @@ if analyze_clicked:
                 )
 
                 st.write(
-
                     f"**{label}** — "
-
                     f"기준: {format_value(baseline_value)} / "
-
                     f"훈련: {format_value(target_value)} / "
-
                     f"변화: {delta_text(difference)}"
                 )
 
+        st.divider()
 
-        # =================================================
-        # RESET
-        # =================================================
+        col1, col2 = st.columns(2)
 
-        if st.button(
+        with col1:
 
-            "🔄 처음부터 다시 측정",
+            if st.button(
+                "⬅️ 공명 발성 다시 녹음",
+                use_container_width=True
+            ):
+                st.session_state.target_audio = None
+                st.session_state.step = 2
+                st.rerun()
 
-            use_container_width=True
-        ):
+        with col2:
 
-            st.session_state.baseline_audio = None
-
-            st.session_state.target_audio = None
-
-            st.rerun()
-
+            if st.button(
+                "🔄 처음부터 다시 측정",
+                use_container_width=True,
+                type="primary"
+            ):
+                st.session_state.baseline_audio = None
+                st.session_state.target_audio = None
+                st.session_state.step = 1
+                st.rerun()
 
     except Exception as error:
 
@@ -1332,10 +1175,17 @@ if analyze_clicked:
             "다시 녹음해 보세요."
         )
 
+        if st.button(
+            "⬅️ 공명 발성 다시 녹음"
+        ):
+            st.session_state.target_audio = None
+            st.session_state.step = 2
+            st.rerun()
+
 
 st.markdown("---")
 
 st.caption(
-    "연구용 프로토타입 v1 · "
+    "연구용 프로토타입 v1.1 · "
     "개인 기준 발성 대비 상대적 음향 변화 분석"
 )
