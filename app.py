@@ -3,9 +3,10 @@ import librosa
 import numpy as np
 import plotly.graph_objects as go
 import parselmouth
+import streamlit.components.v1 as components
 import base64
 
-# 1. 페이지 기본 설정 및 마이크/타이머 디자인 커스텀
+# 1. 페이지 기본 설정 및 디자인
 st.set_page_config(page_title="연기 발성 5대 공명 진단 시스템", page_icon="🎙️", layout="centered")
 
 st.markdown("""
@@ -14,19 +15,6 @@ st.markdown("""
     .sub-title { font-size: 0.95rem; color: #666666; text-align: center; margin-bottom: 25px; }
     .guide-card { background-color: #F0F4F8; padding: 20px; border-radius: 12px; border-left: 6px solid #1F77B4; margin-bottom: 20px; }
     .step-header { font-size: 1.2rem; font-weight: 600; color: #0F4C81; margin-bottom: 10px; }
-    
-    /* 마이크 녹음 위젯 크기 및 스타일 강조 */
-    div[data-testid="stAudioInput"] {
-        border: 3px solid #1F77B4;
-        border-radius: 16px;
-        padding: 15px;
-        background-color: #FFFFFF;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
-    div[data-testid="stAudioInput"] button {
-        transform: scale(1.3);
-        margin-right: 15px;
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -65,30 +53,112 @@ if st.session_state.step == 1:
         st.rerun()
 
 # ==========================================
-# PAGE 2: 5초 역카운트 실시간 마이크 녹음
+# PAGE 2: 5초 자동 종료 카운트다운 녹음
 # ==========================================
 elif st.session_state.step == 2:
-    st.markdown('<div class="step-header">STEP 2. 발성 녹음 진행 (5초 역카운트)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-header">STEP 2. 발성 녹음 진행 (5초 자동 녹음)</div>', unsafe_allow_html=True)
     
     st.markdown("""
         <div class="guide-card">
             <b>📌 정확한 분석을 위한 3가지 수칙</b><br><br>
             1. <b>마이크 거리:</b> 스마트폰/마이크를 입에서 <b>주먹 하나 거리(약 15cm)</b> 띄우세요.<br>
             2. <b>발성 방법:</b> 가장 편안한 톤으로 <b>"에---"</b> 소리를 끊기지 않게 일정하게 내세요.<br>
-            3. <b>5초 카운트다운:</b> 마이크 버튼을 누르고 화면 오른쪽 타이머가 <b>00:05</b>가 될 때 중지하세요.
+            3. <b>녹음 자동 종료:</b> 버튼을 누르면 <b>5초 카운트다운 후 자동으로 중지</b>됩니다.
         </div>
     """, unsafe_allow_html=True)
 
-    st.subheader("🎙️ 실시간 음성 녹음")
-    st.caption("아래 마이크 버튼을 누르면 실시간 타이머(초)와 파형이 커다랗게 움직입니다.")
-    
-    recorded_audio_input = st.audio_input("마이크 발성 녹음 (5초간 유지)")
+    st.subheader("🎙️ 5초 자동 카운트다운 녹음")
+    st.caption("아래 빨간색 버튼을 누르면 5초 카운트다운이 시작되며 5초 후 자동으로 멈춥니다.")
 
-    if recorded_audio_input:
-        st.session_state.audio_bytes = recorded_audio_input.read()
+    # 5초 타이머 및 자동 중지 내장 HTML/JS 엔진
+    custom_recorder_code = """
+    <div style="text-align: center; padding: 15px; font-family: sans-serif;">
+        <button id="recBtn" onclick="startRec()" style="
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background-color: #E74C3C;
+            color: white;
+            border: 4px solid #C0392B;
+            font-size: 22px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
+        ">🎙️<br>녹음 시작</button>
+        
+        <div id="countdown" style="
+            font-size: 36px;
+            font-weight: 800;
+            color: #E74C3C;
+            margin-top: 15px;
+            height: 45px;
+        ">05초</div>
+    </div>
+
+    <script>
+    let mediaRecorder;
+    let chunks = [];
+
+    async function startRec() {
+        const btn = document.getElementById('recBtn');
+        const countDiv = document.getElementById('countdown');
+        
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            chunks = [];
+
+            mediaRecorder.ondataavailable = e => chunks.push(e.data);
+            
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(chunks, { type: 'audio/wav' });
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const base64data = reader.result.split(',')[1];
+                    window.parent.postMessage({ type: 'streamlit:setComponentValue', value: base64data }, '*');
+                };
+                reader.readAsDataURL(blob);
+                stream.getTracks().forEach(track => track.stop());
+            };
+
+            mediaRecorder.start();
+            btn.disabled = true;
+            btn.style.backgroundColor = '#7F8C8D';
+            btn.style.borderColor = '#95A5A6';
+            btn.innerHTML = "🎙️<br>녹음 중";
+
+            let leftTime = 5;
+            countDiv.innerText = "05초";
+
+            let timer = setInterval(() => {
+                leftTime--;
+                if (leftTime > 0) {
+                    countDiv.innerText = "0" + leftTime + "초";
+                } else {
+                    clearInterval(timer);
+                    countDiv.innerText = "✅ 녹음 완료!";
+                    countDiv.style.color = "#27AE60";
+                    btn.innerHTML = "✅<br>완료";
+                    mediaRecorder.stop();
+                }
+            }, 1000);
+
+        } catch (err) {
+            alert("마이크 권한을 허용해 주세요.");
+        }
+    }
+    </script>
+    """
+
+    # 컴포넌트 호출 및 값 수신
+    rec_val = components.html(custom_recorder_code, height=230)
+
+    if rec_val:
+        st.session_state.audio_bytes = base64.b64decode(rec_val)
 
     if st.session_state.audio_bytes is not None:
-        st.success("✅ 녹음이 성공적으로 완료되었습니다! 미리 들어보시고 진행해 주세요.")
+        st.success("✅ 5초 녹음이 정상 수신되었습니다! 들어보신 후 분석을 진행하세요.")
+        st.audio(st.session_state.audio_bytes, format="audio/wav")
         
         col1, col2 = st.columns(2)
         with col1:
@@ -106,7 +176,7 @@ elif st.session_state.step == 2:
         st.rerun()
 
 # ==========================================
-# PAGE 3: 5대 공명 분석 리포트 (100% 기준)
+# PAGE 3: 5대 공명 분석 결과 (100% 기준)
 # ==========================================
 elif st.session_state.step == 3:
     st.markdown('<div class="step-header">STEP 3. 5대 공명 진단 결과 리포트</div>', unsafe_allow_html=True)
@@ -136,7 +206,6 @@ elif st.session_state.step == 3:
         head_e = np.mean(mean_spectrum[(freqs > 3500 * shift) & (freqs <= 5200 * shift)])
 
         raw_scores = np.array([chest_e * 0.7, palate_e * 1.8, teeth_e * 2.8, nasal_e * 4.2, head_e * 5.5])
-        
         norm_scores = (raw_scores / (np.sum(raw_scores) + 1e-6)) * 100
         return norm_scores.astype(int)
 
