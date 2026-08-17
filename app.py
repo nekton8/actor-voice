@@ -10,10 +10,6 @@ import streamlit as st
 from parselmouth.praat import call
 
 
-# =========================================================
-# PAGE
-# =========================================================
-
 st.set_page_config(
     page_title="공명 훈련 피드백",
     page_icon="🎙️",
@@ -28,7 +24,6 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-
 .block-container {
     max-width: 720px;
     padding-top: 0.55rem;
@@ -69,18 +64,18 @@ st.markdown(
     background: #fafbfc;
 }
 
-.choice-caption {
-    text-align: center;
-    font-size: 0.84rem;
-    color: #626973;
-    margin-top: -4px;
-    margin-bottom: 7px;
+.icon-small {
+    height: 38px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 4px 0 3px 0;
 }
 
-.target-head {
-    display: flex;
-    gap: 12px;
-    align-items: center;
+.icon-small img {
+    width: 38px;
+    height: 38px;
+    display: block;
 }
 
 .target-title {
@@ -89,11 +84,10 @@ st.markdown(
 }
 
 .syllable {
-    display: inline-block;
-    margin-top: 3px;
-    font-size: 1.15rem;
+    font-size: 1.12rem;
     font-weight: 850;
     color: #40536f;
+    margin-top: 2px;
 }
 
 .guide {
@@ -185,7 +179,6 @@ st.markdown(
 .bar-label {
     display: flex;
     justify-content: space-between;
-    align-items: center;
     font-size: 0.87rem;
     font-weight: 700;
     margin-bottom: 3px;
@@ -242,7 +235,6 @@ st.markdown(
 }
 
 @media(max-width:600px) {
-
     .block-container {
         padding-top: 0.4rem;
         padding-left: 0.78rem;
@@ -262,10 +254,6 @@ st.markdown(
         padding: 10px 11px;
     }
 
-    .target-title {
-        font-size: 1.25rem;
-    }
-
     .guide {
         padding: 9px 10px;
         font-size: 0.81rem;
@@ -277,15 +265,10 @@ st.markdown(
         padding: 13px;
     }
 
-    .score-value {
-        font-size: 1.8rem;
-    }
-
     button {
         min-height: 42px !important;
     }
 }
-
 </style>
 """,
     unsafe_allow_html=True,
@@ -314,7 +297,7 @@ INFO = {
     "입천장": {
         "syllable": "허—",
         "guide": "입천장과 구강 위쪽의 울림을 느끼며 ‘허—’를 길게 발성하세요.",
-        "tip": "소리가 입 안에서 납작해지지 않도록 입천장 위쪽 공간을 느끼며 ‘허—’를 다시 발성해보세요.",
+        "tip": "입천장 위쪽 공간을 느끼며 ‘허—’를 다시 발성해보세요.",
     },
 
     "이빨·전방": {
@@ -326,7 +309,7 @@ INFO = {
     "비강": {
         "syllable": "미—",
         "guide": "코 주변과 얼굴 중앙의 울림을 느끼며 ‘미—’를 길게 발성하세요.",
-        "tip": "콧소리를 억지로 만들기보다 코 주변과 얼굴 중앙의 진동을 느끼며 ‘미—’를 다시 발성해보세요.",
+        "tip": "코 주변과 얼굴 중앙의 진동을 느끼며 ‘미—’를 다시 발성해보세요.",
     },
 }
 
@@ -420,127 +403,139 @@ POOLED_STD = {
 
 
 # =========================================================
-# SVG ICON
+# SMALL BODY-PART ICONS
 # =========================================================
 
-def icon_svg(name, size=78):
+def make_icon_svg(name):
 
     if name == "가슴":
 
         body = """
-        <path d="M25 11C26 17 29 20 32 20C35 20 38 17 39 11"
-              stroke="#46566d" stroke-width="2.5" stroke-linecap="round"/>
-        <path d="M20 17C15 24 13 35 15 50H49C51 35 49 24 44 17"
-              stroke="#46566d" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M23 27C29 23 35 23 41 27"
-              stroke="#7387aa" stroke-width="4.5" stroke-linecap="round"/>
-        <path d="M23 35H41"
-              stroke="#7387aa" stroke-width="4.5" stroke-linecap="round"/>
+        <path d="M21 8C23 14 27 17 32 17C37 17 41 14 43 8"
+        stroke="#50627a" stroke-width="3" stroke-linecap="round"/>
+        <path d="M18 16C13 24 13 38 16 51H48C51 38 51 24 46 16"
+        stroke="#50627a" stroke-width="3" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M23 30H41M24 37H40"
+        stroke="#8195b4" stroke-width="4" stroke-linecap="round"/>
         """
 
     elif name == "입천장":
 
         body = """
-        <path d="M12 38C18 26 29 19 44 19C48 19 51 20 54 22"
-              stroke="#46566d" stroke-width="2.5" stroke-linecap="round"/>
-        <path d="M13 39C21 40 28 44 34 50"
-              stroke="#46566d" stroke-width="2.5" stroke-linecap="round"/>
-        <path d="M23 31C31 25 40 23 50 24"
-              stroke="#7387aa" stroke-width="4.5" stroke-linecap="round"/>
-        <path d="M52 24C54 28 54 33 53 37"
-              stroke="#46566d" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M10 39C19 25 32 18 49 20"
+        stroke="#50627a" stroke-width="3" fill="none"
+        stroke-linecap="round"/>
+        <path d="M13 40C21 40 28 44 34 50"
+        stroke="#50627a" stroke-width="3" fill="none"
+        stroke-linecap="round"/>
+        <path d="M22 30C31 24 40 23 49 24"
+        stroke="#8195b4" stroke-width="5" fill="none"
+        stroke-linecap="round"/>
         """
 
     elif name == "이빨·전방":
 
         body = """
-        <path d="M14 25C19 19 25 17 32 17C39 17 45 19 50 25"
-              stroke="#46566d" stroke-width="2.5" stroke-linecap="round"/>
-        <path d="M14 40C19 46 25 48 32 48C39 48 45 46 50 40"
-              stroke="#46566d" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M12 24C22 15 42 15 52 24"
+        stroke="#50627a" stroke-width="3" fill="none"
+        stroke-linecap="round"/>
+        <path d="M12 40C22 49 42 49 52 40"
+        stroke="#50627a" stroke-width="3" fill="none"
+        stroke-linecap="round"/>
         <path d="M18 29H46"
-              stroke="#7387aa" stroke-width="4.5" stroke-linecap="round"/>
-        <path d="M21 29V35M26 29V35M31 29V35M36 29V35M41 29V35"
-              stroke="#46566d" stroke-width="1.7"/>
-        <path d="M19 36H45"
-              stroke="#46566d" stroke-width="2" stroke-linecap="round"/>
+        stroke="#8195b4" stroke-width="5" stroke-linecap="round"/>
+        <path d="M22 29V35M27 29V35M32 29V35M37 29V35M42 29V35"
+        stroke="#50627a" stroke-width="2"/>
         """
 
     else:
 
         body = """
-        <path d="M25 11C35 12 43 19 45 29C46 35 44 40 39 43C36 45 35 49 35 53"
-              stroke="#46566d" stroke-width="2.5" stroke-linecap="round"/>
-        <path d="M25 11C19 16 16 23 16 31C16 40 20 47 27 52"
-              stroke="#46566d" stroke-width="2.5" stroke-linecap="round"/>
-        <path d="M26 23C34 23 40 27 42 32"
-              stroke="#7387aa" stroke-width="4.5" stroke-linecap="round"/>
-        <path d="M42 32C37 35 33 36 28 35"
-              stroke="#7387aa" stroke-width="4.5" stroke-linecap="round"/>
+        <path d="M24 8C36 9 44 18 45 30C46 37 42 41 38 44C35 47 35 50 35 54"
+        stroke="#50627a" stroke-width="3" fill="none"
+        stroke-linecap="round"/>
+        <path d="M24 8C17 14 14 23 15 32C16 42 20 49 27 54"
+        stroke="#50627a" stroke-width="3" fill="none"
+        stroke-linecap="round"/>
+        <path d="M25 23C34 23 40 27 42 32C37 35 33 36 28 35"
+        stroke="#8195b4" stroke-width="5" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"/>
         """
 
     return f"""
-    <div style="
-        display:flex;
-        justify-content:center;
-        align-items:center;
-        height:{size + 8}px;
-    ">
-        <svg
-            width="{size}"
-            height="{size}"
-            viewBox="0 0 64 64"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-        >
-            {body}
-        </svg>
-    </div>
+    <svg width="64" height="64" viewBox="0 0 64 64"
+    xmlns="http://www.w3.org/2000/svg">
+    {body}
+    </svg>
     """
+
+
+def icon_data_uri(name):
+
+    svg = make_icon_svg(name)
+
+    encoded = base64.b64encode(
+        svg.encode("utf-8")
+    ).decode("ascii")
+
+    return (
+        "data:image/svg+xml;base64,"
+        +
+        encoded
+    )
+
+
+def render_small_icon(name):
+
+    uri = icon_data_uri(name)
+
+    st.markdown(
+        f"""
+<div class="icon-small">
+<img src="{uri}">
+</div>
+""",
+        unsafe_allow_html=True,
+    )
 
 
 # =========================================================
 # SESSION
 # =========================================================
 
-def init_state():
-
-    defaults = {
-        "page": "select",
-        "target": None,
-        "audio_bytes": None,
-        "recorder_id": 0,
-        "result": None,
-        "history": [],
-    }
-
-    for key, value in defaults.items():
-
-        if key not in st.session_state:
-            st.session_state[key] = value
+defaults = {
+    "page": "select",
+    "target": None,
+    "audio_bytes": None,
+    "recorder_id": 0,
+    "result": None,
+    "history": [],
+}
 
 
-    # 이전 앱의 두개골 세션값 자동 초기화
-    if st.session_state.target not in RESONANCES:
+for key, value in defaults.items():
 
-        st.session_state.target = None
-
-        if st.session_state.page != "select":
-            st.session_state.page = "select"
+    if key not in st.session_state:
+        st.session_state[key] = value
 
 
-    if st.session_state.page not in {
-        "select",
-        "record",
-        "review",
-        "result",
-    }:
+if st.session_state.target not in RESONANCES:
 
+    st.session_state.target = None
+
+    if st.session_state.page != "select":
         st.session_state.page = "select"
 
 
-init_state()
+if st.session_state.page not in {
+    "select",
+    "record",
+    "review",
+    "result",
+}:
+
+    st.session_state.page = "select"
 
 
 # =========================================================
@@ -614,18 +609,12 @@ RECORDER_CSS = """
         inset 0 0 0 1px rgba(0,0,0,.06);
 }
 
-.record-button:active {
-    transform:scale(.95);
+.record-button.recording {
+    background:#e53935;
 }
 
 .mic-icon {
     font-size:34px;
-    line-height:1;
-}
-
-.record-button.recording {
-    background:#e53935;
-    animation:pulse 1.05s infinite;
 }
 
 .record-button.recording .mic-icon {
@@ -649,7 +638,6 @@ RECORDER_CSS = """
 .record-button.done .mic-icon::after {
     content:"✓";
     font-size:36px;
-    font-weight:800;
     color:#269451;
 }
 
@@ -657,7 +645,6 @@ RECORDER_CSS = """
     margin-top:8px;
     font-size:14px;
     font-weight:750;
-    color:var(--st-text-color);
 }
 
 .status.recording {
@@ -672,8 +659,6 @@ RECORDER_CSS = """
     margin-top:3px;
     font-size:25px;
     font-weight:850;
-    font-variant-numeric:tabular-nums;
-    color:var(--st-text-color);
 }
 
 .progress-wrap {
@@ -689,29 +674,12 @@ RECORDER_CSS = """
     width:0%;
     height:100%;
     background:#e53935;
-    border-radius:999px;
 }
 
 .help {
     margin-top:6px;
     font-size:10.5px;
     color:#7a7f87;
-    text-align:center;
-}
-
-@keyframes pulse {
-
-    0% {
-        box-shadow:0 0 0 0 rgba(229,57,53,.28);
-    }
-
-    70% {
-        box-shadow:0 0 0 12px rgba(229,57,53,0);
-    }
-
-    100% {
-        box-shadow:0 0 0 0 rgba(229,57,53,0);
-    }
 }
 """
 
@@ -756,16 +724,6 @@ export default function(component) {
     let stopTimer = null;
 
 
-    function formatTime(ms) {
-
-        const sec =
-            Math.min(ms, RECORD_MS) / 1000;
-
-        return "00:" +
-            sec.toFixed(1).padStart(4, "0");
-    }
-
-
     function mergeBuffers(parts) {
 
         let total = 0;
@@ -793,11 +751,7 @@ export default function(component) {
     }
 
 
-    function writeString(
-        view,
-        offset,
-        text
-    ) {
+    function writeString(view, offset, text) {
 
         for (
             let i = 0;
@@ -813,10 +767,7 @@ export default function(component) {
     }
 
 
-    function encodeWav(
-        samples,
-        sr
-    ) {
+    function encodeWav(samples, sr) {
 
         const buffer =
             new ArrayBuffer(
@@ -826,11 +777,7 @@ export default function(component) {
         const view =
             new DataView(buffer);
 
-        writeString(
-            view,
-            0,
-            "RIFF"
-        );
+        writeString(view, 0, "RIFF");
 
         view.setUint32(
             4,
@@ -838,35 +785,12 @@ export default function(component) {
             true
         );
 
-        writeString(
-            view,
-            8,
-            "WAVE"
-        );
+        writeString(view, 8, "WAVE");
+        writeString(view, 12, "fmt ");
 
-        writeString(
-            view,
-            12,
-            "fmt "
-        );
-
-        view.setUint32(
-            16,
-            16,
-            true
-        );
-
-        view.setUint16(
-            20,
-            1,
-            true
-        );
-
-        view.setUint16(
-            22,
-            1,
-            true
-        );
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, 1, true);
 
         view.setUint32(
             24,
@@ -880,23 +804,10 @@ export default function(component) {
             true
         );
 
-        view.setUint16(
-            32,
-            2,
-            true
-        );
+        view.setUint16(32, 2, true);
+        view.setUint16(34, 16, true);
 
-        view.setUint16(
-            34,
-            16,
-            true
-        );
-
-        writeString(
-            view,
-            36,
-            "data"
-        );
+        writeString(view, 36, "data");
 
         view.setUint32(
             40,
@@ -970,9 +881,7 @@ export default function(component) {
                 reader.onerror =
                     reject;
 
-                reader.readAsDataURL(
-                    blob
-                );
+                reader.readAsDataURL(blob);
             }
         );
     }
@@ -994,9 +903,13 @@ export default function(component) {
             );
 
         timerText.textContent =
-            formatTime(
-                capped
-            );
+            "00:"
+            +
+            (
+                capped / 1000
+            )
+            .toFixed(1)
+            .padStart(4, "0");
 
         progressBar.style.width =
             (
@@ -1054,12 +967,6 @@ export default function(component) {
                 await audioContext.close();
             } catch {}
         }
-
-        processor = null;
-        source = null;
-        silentGain = null;
-        stream = null;
-        audioContext = null;
     }
 
 
@@ -1071,9 +978,7 @@ export default function(component) {
 
         recording = false;
 
-        clearTimeout(
-            stopTimer
-        );
+        clearTimeout(stopTimer);
 
         cancelAnimationFrame(
             timerFrame
@@ -1085,19 +990,8 @@ export default function(component) {
         progressBar.style.width =
             "100%";
 
-        button.classList.remove(
-            "recording"
-        );
-
-        statusText.classList.remove(
-            "recording"
-        );
-
         statusText.textContent =
             "저장 중...";
-
-        helpText.textContent =
-            "잠시만 기다려주세요.";
 
         const merged =
             mergeBuffers(
@@ -1170,18 +1064,10 @@ export default function(component) {
                 await navigator.mediaDevices.getUserMedia({
 
                     audio: {
-
-                        echoCancellation:
-                            false,
-
-                        noiseSuppression:
-                            false,
-
-                        autoGainControl:
-                            false,
-
-                        channelCount:
-                            1
+                        echoCancellation:false,
+                        noiseSuppression:false,
+                        autoGainControl:false,
+                        channelCount:1
                     }
                 });
 
@@ -1223,7 +1109,8 @@ export default function(component) {
                     }
 
                     const input =
-                        event.inputBuffer
+                        event
+                        .inputBuffer
                         .getChannelData(0);
 
                     buffers.push(
@@ -1233,9 +1120,7 @@ export default function(component) {
                     );
                 };
 
-            source.connect(
-                processor
-            );
+            source.connect(processor);
 
             processor.connect(
                 silentGain
@@ -1247,16 +1132,8 @@ export default function(component) {
 
             recording = true;
 
-            button.classList.remove(
-                "done"
-            );
-
             button.classList.add(
                 "recording"
-            );
-
-            statusText.classList.remove(
-                "done"
             );
 
             statusText.classList.add(
@@ -1267,13 +1144,7 @@ export default function(component) {
                 "● 녹음 중";
 
             helpText.textContent =
-                "5초 후 자동으로 종료됩니다.";
-
-            timerText.textContent =
-                "00:00.0";
-
-            progressBar.style.width =
-                "0%";
+                "5초 후 자동 종료됩니다.";
 
             startTime =
                 performance.now();
@@ -1288,15 +1159,11 @@ export default function(component) {
 
         } catch (error) {
 
-            console.error(
-                error
-            );
-
             statusText.textContent =
                 "마이크 사용 불가";
 
             helpText.textContent =
-                "브라우저의 마이크 권한을 허용해주세요.";
+                "마이크 권한을 허용해주세요.";
         }
     }
 
@@ -1312,9 +1179,7 @@ export default function(component) {
 
     return () => {
 
-        clearTimeout(
-            stopTimer
-        );
+        clearTimeout(stopTimer);
 
         cancelAnimationFrame(
             timerFrame
@@ -1331,20 +1196,13 @@ export default function(component) {
                 track.stop();
             }
         }
-
-        if (audioContext) {
-
-            try {
-                audioContext.close();
-            } catch {}
-        }
     };
 }
 """
 
 
 recorder_component = st.components.v2.component(
-    "student_resonance_recorder_v3",
+    "student_resonance_recorder_v4",
     html=RECORDER_HTML,
     css=RECORDER_CSS,
     js=RECORDER_JS,
@@ -1372,15 +1230,9 @@ def five_second_recorder(key):
     if not audio_b64:
         return None
 
-    try:
-
-        return base64.b64decode(
-            audio_b64
-        )
-
-    except Exception:
-
-        return None
+    return base64.b64decode(
+        audio_b64
+    )
 
 
 # =========================================================
@@ -1466,21 +1318,15 @@ def spectral_tilt(
     if len(freq) < 10:
         return np.nan
 
-    x = np.log10(freq)
-
-    y = (
-        10
-        *
-        np.log10(
-            pwr + 1e-12
-        )
-    )
-
     return float(
         np.polyfit(
-            x,
-            y,
-            1
+            np.log10(freq),
+            10
+            *
+            np.log10(
+                pwr + 1e-12
+            ),
+            1,
         )[0]
     )
 
@@ -1500,9 +1346,6 @@ def mean_formant(
         duration - 0.15,
         duration * 0.85
     )
-
-    if end <= start:
-        return np.nan
 
     values = []
 
@@ -1549,6 +1392,7 @@ def analyze_audio(
     ) as tmp:
 
         tmp.write(audio_bytes)
+
         tmp.flush()
 
         y, sr = librosa.load(
@@ -1563,50 +1407,15 @@ def analyze_audio(
         )
 
         voice_duration = (
-            len(y_trim) / sr
+            len(y_trim)
+            /
+            sr
         )
 
         if voice_duration < 2:
 
             raise ValueError(
-                "발성 시간이 너무 짧습니다. "
-                "소리를 조금 더 길게 유지해서 다시 녹음해주세요."
-            )
-
-        rms = float(
-            np.sqrt(
-                np.mean(
-                    np.square(y_trim)
-                )
-                +
-                1e-12
-            )
-        )
-
-        rms_db = (
-            20
-            *
-            np.log10(rms)
-        )
-
-        peak = float(
-            np.max(
-                np.abs(y_trim)
-            )
-        )
-
-        if rms_db < -48:
-
-            raise ValueError(
-                "녹음된 소리가 너무 작습니다. "
-                "휴대폰을 조금 가까이 두고 다시 녹음해주세요."
-            )
-
-        if peak >= 0.999:
-
-            raise ValueError(
-                "소리가 너무 크게 녹음되었습니다. "
-                "조금 작게 발성해서 다시 녹음해주세요."
+                "발성 시간이 너무 짧습니다. 다시 녹음해주세요."
             )
 
         y_norm = librosa.util.normalize(
@@ -1724,9 +1533,6 @@ def analyze_audio(
             "voice_duration_sec":
                 voice_duration,
 
-            "rms_db":
-                rms_db,
-
             "f0_hz":
                 f0,
 
@@ -1785,10 +1591,6 @@ def analyze_audio(
         }
 
 
-# =========================================================
-# CLASSIFIER
-# =========================================================
-
 def classify(features):
 
     distances = {}
@@ -1804,8 +1606,7 @@ def classify(features):
             if not np.isfinite(value):
 
                 raise ValueError(
-                    "음향 특징을 안정적으로 분석하지 못했습니다. "
-                    "다시 녹음해주세요."
+                    "음향 분석이 불안정합니다. 다시 녹음해주세요."
                 )
 
             sd = max(
@@ -1823,15 +1624,10 @@ def classify(features):
                 sd
             )
 
-        z_values = np.array(
-            z_values,
-            dtype=float
-        )
-
         distances[resonance] = float(
             np.sqrt(
                 np.mean(
-                    z_values ** 2
+                    np.array(z_values) ** 2
                 )
             )
         )
@@ -1842,8 +1638,7 @@ def classify(features):
     )
 
     raw = {
-        name:
-            np.exp(-distance)
+        name: np.exp(-distance)
         for name, distance
         in ordered
     }
@@ -1867,10 +1662,6 @@ def classify(features):
     return ordered, scores
 
 
-# =========================================================
-# RESULT / HISTORY
-# =========================================================
-
 def previous_target_score(target):
 
     rows = [
@@ -1888,78 +1679,6 @@ def previous_target_score(target):
     )
 
 
-def trend_text(
-    target,
-    current_score
-):
-
-    old_scores = [
-        float(row["target_score"])
-        for row
-        in st.session_state.history
-        if row["target"] == target
-    ]
-
-    scores = (
-        old_scores
-        +
-        [current_score]
-    )
-
-    recent = scores[-3:]
-
-    if len(recent) == 1:
-
-        return (
-            "첫 기록입니다. "
-            "같은 공명을 반복해서 연습하면 변화 추세를 확인할 수 있습니다."
-        )
-
-    if len(recent) >= 3:
-
-        overall = (
-            recent[-1]
-            -
-            recent[0]
-        )
-
-        if overall >= 8:
-
-            return (
-                f"최근 {len(recent)}회에서 "
-                f"{target} 공명 일치도가 좋아지고 있습니다."
-            )
-
-        if overall <= -8:
-
-            return (
-                f"최근 {len(recent)}회에서 "
-                f"{target} 공명 일치도가 낮아졌습니다."
-            )
-
-    delta = (
-        recent[-1]
-        -
-        recent[-2]
-    )
-
-    if delta >= 5:
-
-        return (
-            f"직전 {target} 연습보다 좋아졌습니다."
-        )
-
-    if delta <= -5:
-
-        return (
-            f"직전 {target} 연습보다 조금 낮아졌습니다."
-        )
-
-    return (
-        f"직전 {target} 연습과 비슷한 수준입니다."
-    )
-
-
 def build_result(
     target,
     ordered,
@@ -1968,23 +1687,12 @@ def build_result(
 
     prediction = ordered[0][0]
 
-    top_score = float(
-        scores[prediction]
-    )
-
     target_score = float(
         scores[target]
     )
 
-    target_rank = (
-        [
-            name
-            for name, _
-            in ordered
-        ]
-        .index(target)
-        +
-        1
+    top_score = float(
+        scores[prediction]
     )
 
     second_name = ordered[1][0]
@@ -2019,8 +1727,7 @@ def build_result(
             )
 
             message = (
-                f"현재 발성은 목표인 {target} 공명과 "
-                "가장 잘 일치합니다."
+                f"현재 발성은 목표인 {target} 공명과 가장 잘 일치합니다."
             )
 
         else:
@@ -2034,48 +1741,23 @@ def build_result(
             )
 
             message = (
-                f"{target} 공명이 가장 강하지만 "
-                "다른 공명도 함께 나타나고 있습니다."
+                f"{target} 공명이 가장 강하지만 다른 공명도 함께 나타납니다."
             )
 
     else:
 
-        if (
-            target_rank == 2
-            and
-            target_score
-            >=
-            top_score - 10
-        ):
+        status = (
+            f"{prediction} 공명이 더 강합니다"
+        )
 
-            status = (
-                "목표 공명이 충분히 분명하지 않습니다"
-            )
+        css = (
+            "result-bad"
+        )
 
-            css = (
-                "result-mid"
-            )
-
-            message = (
-                f"{target} 공명도 나타나지만 "
-                f"현재는 {prediction} 공명이 조금 더 강합니다."
-            )
-
-        else:
-
-            status = (
-                f"{prediction} 공명이 더 강합니다"
-            )
-
-            css = (
-                "result-bad"
-            )
-
-            message = (
-                f"목표는 {target} 공명이지만 "
-                f"현재 발성에서는 {prediction} 공명의 특징이 "
-                "더 강하게 나타납니다."
-            )
+        message = (
+            f"목표는 {target} 공명이지만 현재는 "
+            f"{prediction} 공명의 특징이 더 강합니다."
+        )
 
     return {
 
@@ -2109,20 +1791,8 @@ def build_result(
         "scores":
             scores,
 
-        "ordered":
-            ordered,
-
-        "previous_score":
-            previous,
-
         "delta":
             delta,
-
-        "trend_text":
-            trend_text(
-                target,
-                target_score
-            ),
     }
 
 
@@ -2131,16 +1801,12 @@ def reset_measurement(
 ):
 
     st.session_state.audio_bytes = None
+
     st.session_state.result = None
+
     st.session_state.recorder_id += 1
 
-    if (
-        keep_target
-        and
-        st.session_state.target
-        in
-        RESONANCES
-    ):
+    if keep_target:
 
         st.session_state.page = (
             "record"
@@ -2156,83 +1822,8 @@ def reset_measurement(
 
 
 # =========================================================
-# PRACTICE DIARY
+# DIARY
 # =========================================================
-
-def resonance_summary(target):
-
-    rows = [
-        row
-        for row
-        in st.session_state.history
-        if row["target"] == target
-    ]
-
-    if not rows:
-        return None
-
-    scores = [
-        float(
-            row["target_score"]
-        )
-        for row
-        in rows
-    ]
-
-    latest = scores[-1]
-
-    best = max(scores)
-
-    if len(scores) == 1:
-
-        trend = "첫 기록"
-
-    else:
-
-        recent = scores[-3:]
-
-        change = (
-            recent[-1]
-            -
-            recent[0]
-        )
-
-        if change >= 8:
-
-            trend = (
-                "좋아지는 중"
-            )
-
-        elif change <= -8:
-
-            trend = (
-                "다시 점검 필요"
-            )
-
-        else:
-
-            trend = (
-                "비슷하게 유지"
-            )
-
-    return {
-
-        "공명":
-            target,
-
-        "연습횟수":
-            len(rows),
-
-        "최근 일치도":
-            round(latest),
-
-        "최고 일치도":
-            round(best),
-
-        "최근 추세":
-            trend,
-    }
-
 
 def render_diary():
 
@@ -2240,40 +1831,8 @@ def render_diary():
         return
 
     with st.expander(
-        "📘 연습일지",
-        expanded=False
+        "📘 연습일지"
     ):
-
-        summaries = []
-
-        for resonance in RESONANCES:
-
-            summary = resonance_summary(
-                resonance
-            )
-
-            if summary:
-                summaries.append(
-                    summary
-                )
-
-        if summaries:
-
-            st.markdown(
-                "#### 연습 요약"
-            )
-
-            st.dataframe(
-                pd.DataFrame(
-                    summaries
-                ),
-                use_container_width=True,
-                hide_index=True,
-            )
-
-        st.markdown(
-            "#### 회차별 기록"
-        )
 
         for row in reversed(
             st.session_state.history
@@ -2300,7 +1859,7 @@ def render_diary():
 <div class="diary-card">
 
 <div class="diary-title">
-{row['session_no']}회차 · {row['target']} · {row['syllable']}
+{row['session_no']}회차 · {row['target']}
 </div>
 
 <div class="diary-meta">
@@ -2309,7 +1868,7 @@ def render_diary():
 
 <div style="margin-top:5px;font-size:.87rem;">
 
-목표 공명 일치도
+공명 일치도
 <b>{row['target_score']:.0f}</b>
 {delta_text}
 
@@ -2328,64 +1887,22 @@ def render_diary():
                 unsafe_allow_html=True,
             )
 
+
         detail_df = pd.DataFrame(
             st.session_state.history
         )
 
+
         with st.expander(
-            "연구자용 상세 데이터",
-            expanded=False
+            "연구자용 상세 데이터"
         ):
 
-            researcher_columns = [
-
-                "session_no",
-                "target",
-                "syllable",
-                "prediction",
-                "status",
-
-                "target_score",
-                "top_score",
-                "second_name",
-                "second_score",
-
-                "voice_duration_sec",
-                "rms_db",
-
-                "f0_hz",
-                "f1_hz",
-                "f2_hz",
-                "f3_hz",
-
-                "hnr_db",
-                "spectral_centroid_hz",
-                "spectral_tilt",
-
-                "band_80_500_pct",
-                "band_500_1500_pct",
-                "band_1500_3000_pct",
-                "band_3000_5000_pct",
-
-                "timestamp",
-            ]
-
-            researcher_columns = [
-                column
-                for column
-                in researcher_columns
-                if column
-                in
-                detail_df.columns
-            ]
-
             st.dataframe(
-                detail_df[
-                    researcher_columns
-                ],
+                detail_df,
                 use_container_width=True,
                 hide_index=True,
             )
+
 
         csv_bytes = (
             detail_df
@@ -2397,10 +1914,11 @@ def render_diary():
             )
         )
 
+
         st.download_button(
-            "연습일지 CSV 다운로드",
+            "연구자용 상세 데이터 CSV 다운로드",
             data=csv_bytes,
-            file_name="resonance_practice_diary.csv",
+            file_name="resonance_research_data.csv",
             mime="text/csv",
             use_container_width=True,
         )
@@ -2437,41 +1955,22 @@ if st.session_state.page == "select":
     st.markdown(
         """
 <div class="card">
-
-<b>
-연습할 공명을 선택하세요.
-</b>
-
-<br>
-
-<span class="small">
-각 공명에 적합한 소리로 연습합니다.
-</span>
-
+<b>연습할 공명을 선택하세요.</b>
 </div>
 """,
         unsafe_allow_html=True,
     )
 
+
     col1, col2 = st.columns(
         2
     )
 
+
     with col1:
 
-        st.html(
-            icon_svg(
-                "가슴"
-            )
-        )
-
-        st.markdown(
-            """
-<div class="choice-caption">
-가슴 공명 · 하—
-</div>
-""",
-            unsafe_allow_html=True,
+        render_small_icon(
+            "가슴"
         )
 
         if st.button(
@@ -2491,19 +1990,8 @@ if st.session_state.page == "select":
             st.rerun()
 
 
-        st.html(
-            icon_svg(
-                "이빨·전방"
-            )
-        )
-
-        st.markdown(
-            """
-<div class="choice-caption">
-이빨·전방 공명 · 히—
-</div>
-""",
-            unsafe_allow_html=True,
+        render_small_icon(
+            "이빨·전방"
         )
 
         if st.button(
@@ -2525,19 +2013,8 @@ if st.session_state.page == "select":
 
     with col2:
 
-        st.html(
-            icon_svg(
-                "입천장"
-            )
-        )
-
-        st.markdown(
-            """
-<div class="choice-caption">
-입천장 공명 · 허—
-</div>
-""",
-            unsafe_allow_html=True,
+        render_small_icon(
+            "입천장"
         )
 
         if st.button(
@@ -2557,19 +2034,8 @@ if st.session_state.page == "select":
             st.rerun()
 
 
-        st.html(
-            icon_svg(
-                "비강"
-            )
-        )
-
-        st.markdown(
-            """
-<div class="choice-caption">
-비강 공명 · 미—
-</div>
-""",
-            unsafe_allow_html=True,
+        render_small_icon(
+            "비강"
         )
 
         if st.button(
@@ -2599,21 +2065,11 @@ elif st.session_state.page == "record":
         st.session_state.target
     )
 
-    info = INFO[
-        target
-    ]
+    info = INFO[target]
 
-    st.html(
+    st.markdown(
         f"""
 <div class="card">
-
-<div class="target-head">
-
-<div>
-{icon_svg(target, 58)}
-</div>
-
-<div>
 
 <div class="small">
 현재 연습
@@ -2628,12 +2084,10 @@ elif st.session_state.page == "record":
 </div>
 
 </div>
-
-</div>
-
-</div>
-"""
+""",
+        unsafe_allow_html=True,
     )
+
 
     st.markdown(
         f"""
@@ -2652,6 +2106,7 @@ elif st.session_state.page == "record":
         unsafe_allow_html=True,
     )
 
+
     audio = five_second_recorder(
         key=(
             "student_"
@@ -2661,6 +2116,7 @@ elif st.session_state.page == "record":
             )
         )
     )
+
 
     if audio:
 
@@ -2673,6 +2129,7 @@ elif st.session_state.page == "record":
         )
 
         st.rerun()
+
 
     if st.button(
         "← 다른 공명 선택",
@@ -2696,42 +2153,33 @@ elif st.session_state.page == "review":
         st.session_state.target
     )
 
-    st.html(
+
+    st.markdown(
         f"""
 <div class="card">
 
-<div class="target-head">
+<b>{target} 공명</b><br>
 
-<div>
-{icon_svg(target, 52)}
-</div>
-
-<div>
-
-<div class="target-title">
-{target} 공명 녹음 확인
-</div>
-
-<div class="small">
-{INFO[target]['syllable']}
-</div>
+<span class="small">
+{INFO[target]['syllable']} 녹음 확인
+</span>
 
 </div>
-
-</div>
-
-</div>
-"""
+""",
+        unsafe_allow_html=True,
     )
+
 
     st.audio(
         st.session_state.audio_bytes,
         format="audio/wav"
     )
 
+
     col1, col2 = st.columns(
         2
     )
+
 
     with col1:
 
@@ -2745,6 +2193,7 @@ elif st.session_state.page == "review":
             )
 
             st.rerun()
+
 
     with col2:
 
@@ -2774,18 +2223,15 @@ elif st.session_state.page == "review":
                         scores
                     )
 
-                    session_no = (
-                        len(
-                            st.session_state.history
-                        )
-                        +
-                        1
-                    )
 
                     history_row = {
 
                         "session_no":
-                            session_no,
+                            len(
+                                st.session_state.history
+                            )
+                            +
+                            1,
 
                         "timestamp":
                             datetime.now().strftime(
@@ -2796,9 +2242,7 @@ elif st.session_state.page == "review":
                             target,
 
                         "syllable":
-                            INFO[
-                                target
-                            ][
+                            INFO[target][
                                 "syllable"
                             ],
 
@@ -2840,19 +2284,24 @@ elif st.session_state.page == "review":
                         **features,
                     }
 
+
                     st.session_state.history.append(
                         history_row
                     )
+
 
                     st.session_state.result = (
                         result
                     )
 
+
                     st.session_state.page = (
                         "result"
                     )
 
+
                 st.rerun()
+
 
             except Exception as error:
 
@@ -2872,10 +2321,9 @@ elif st.session_state.page == "result":
     )
 
     target = (
-        result[
-            "target"
-        ]
+        result["target"]
     )
+
 
     st.markdown(
         f"""
@@ -2905,37 +2353,31 @@ elif st.session_state.page == "result":
         ]
     )
 
+
     if delta is None:
 
-        delta_html = (
-            '<span class="score-delta-flat">'
-            '첫 기록'
-            '</span>'
+        delta_text = (
+            "첫 기록"
         )
 
     elif delta >= 3:
 
-        delta_html = (
-            f'<span class="score-delta-up">'
-            f'▲ {delta:.0f}'
-            f'</span>'
+        delta_text = (
+            f"▲ {delta:.0f}"
         )
 
     elif delta <= -3:
 
-        delta_html = (
-            f'<span class="score-delta-down">'
-            f'▼ {abs(delta):.0f}'
-            f'</span>'
+        delta_text = (
+            f"▼ {abs(delta):.0f}"
         )
 
     else:
 
-        delta_html = (
-            '<span class="score-delta-flat">'
-            '비슷함'
-            '</span>'
+        delta_text = (
+            "비슷함"
         )
+
 
     st.markdown(
         f"""
@@ -2950,8 +2392,7 @@ elif st.session_state.page == "result":
 </div>
 
 <div class="small">
-이전 같은 공명 연습 대비
-{delta_html}
+이전 같은 공명 연습 대비 {delta_text}
 </div>
 
 </div>
@@ -2964,6 +2405,7 @@ elif st.session_state.page == "result":
         "#### 현재 공명 분석"
     )
 
+
     ordered_scores = sorted(
         result[
             "scores"
@@ -2972,10 +2414,8 @@ elif st.session_state.page == "result":
         reverse=True
     )
 
-    for (
-        name,
-        value
-    ) in ordered_scores:
+
+    for name, value in ordered_scores:
 
         st.markdown(
             f"""
@@ -2983,21 +2423,15 @@ elif st.session_state.page == "result":
 
 <div class="bar-label">
 
-<span>
-{name}
-</span>
-
-<span>
-{value:.0f}
-</span>
+<span>{name}</span>
+<span>{value:.0f}</span>
 
 </div>
 
 <div class="bar-bg">
 
-<div
-class="bar-fill"
-style="width:{min(max(value, 0), 100):.1f}%">
+<div class="bar-fill"
+style="width:{value:.1f}%">
 </div>
 
 </div>
@@ -3008,28 +2442,8 @@ style="width:{min(max(value, 0), 100):.1f}%">
         )
 
 
-    st.markdown(
-        f"""
-<div class="trend-box">
-
-<b>
-연습 변화
-</b>
-
-<br>
-
-{result['trend_text']}
-
-</div>
-""",
-        unsafe_allow_html=True,
-    )
-
-
     if (
-        result[
-            "prediction"
-        ]
+        result["prediction"]
         !=
         target
     ):
@@ -3038,11 +2452,7 @@ style="width:{min(max(value, 0), 100):.1f}%">
             f"""
 <div class="tip">
 
-<b>
-다음 발성
-</b>
-
-<br>
+<b>다음 발성</b><br>
 
 {INFO[target]['tip']}
 
@@ -3052,16 +2462,10 @@ style="width:{min(max(value, 0), 100):.1f}%">
         )
 
 
-    st.caption(
-        "공명 일치도는 실제 공명의 양이나 확률이 아니라, "
-        "현재 음성이 4개 훈련 기준 패턴 중 어디에 가까운지를 "
-        "비교한 연습용 점수입니다."
-    )
-
-
     col1, col2 = st.columns(
         2
     )
+
 
     with col1:
 
@@ -3075,6 +2479,7 @@ style="width:{min(max(value, 0), 100):.1f}%">
             )
 
             st.rerun()
+
 
     with col2:
 
