@@ -3,38 +3,57 @@ import librosa
 import numpy as np
 import plotly.graph_objects as go
 import parselmouth
+from audio_recorder_streamlit import audio_recorder
 
-# 1. 기본 화면 설정 및 디자인
-st.set_page_config(page_title="연기 발성 5대 공명 진단 시스템", page_icon="🎙️", layout="centered")
+# 1. 페이지 기본 설정 및 디자인
+st.set_page_config(page_title="연기 발성 5대 공명 자가진단 시스템", page_icon="🎙️", layout="centered")
 
 st.markdown("""
     <style>
     .main-title { font-size: 2.0rem; font-weight: 700; color: #1E1E1E; text-align: center; }
     .sub-title { font-size: 0.95rem; color: #666666; text-align: center; margin-bottom: 20px; }
+    .guide-box { background-color: #f8f9fa; padding: 15px; border-radius: 10px; border-left: 5px solid #1F77B4; margin-bottom: 20px; }
     </style>
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="main-title">🎙️ 연기 발성 5대 공명 진단 시스템</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">Praat 음향학 분석 엔진 기반 · 성별 맞춤형 공명 밸런스 측정</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">Praat 음향학 분석 엔진 기반 · 실시간 음성 진단</div>', unsafe_allow_html=True)
 st.divider()
 
-# 2. 사용자 입력 (성별 선택)
-col1, col2 = st.columns([1, 2])
-with col1:
-    gender = st.radio("성별 선택", options=["남성 (Male)", "여성 (Female)"], index=0)
-with col2:
-    audio_file = st.file_uploader("음성 파일 업로드 (.wav, .mp3, .m4a)", type=['wav', 'mp3', 'm4a'])
+# 2. 가이드 및 성별 선택
+st.markdown("""
+    <div class="guide-box">
+        <b>📌 테스트 진행 방법</b><br>
+        1. 성별을 먼저 선택해 주세요.<br>
+        2. 아래 마이크 아이콘을 누르고, 편안한 톤으로 <b>"에---"</b> 소리를 3~5초간 일정하게 내주세요.<br>
+        3. 녹음 버튼을 한 번 더 누르면 녹음이 종료되고 바로 분석됩니다.
+    </div>
+""", unsafe_allow_html=True)
 
-# 3. Praat 기반 분석 엔진
+gender = st.radio("성별 선택", options=["남성 (Male)", "여성 (Female)"], index=0, horizontal=True)
+
+st.write("")
+st.subheader("🎙️ 실시간 음성 녹음")
+
+# 3. 마이크 녹음 위젯
+audio_bytes = audio_recorder(
+    text="버튼을 눌러 녹음을 시작하세요",
+    recording_color="#e8b62c",
+    neutral_color="#6aa36f",
+    icon_name="microphone",
+    icon_size="3x",
+)
+
+# 4. Praat 기반 분석 엔진
 def analyze_resonance_praat(audio_bytes, is_female=False):
-    with open("temp_audio_input", "wb") as f:
+    with open("temp_audio_input.wav", "wb") as f:
         f.write(audio_bytes)
     
-    sound = parselmouth.Sound("temp_audio_input")
+    sound = parselmouth.Sound("temp_audio_input.wav")
     max_formant = 5500.0 if is_female else 5000.0
     formant = sound.to_formant_burg(max_formant=max_formant)
     
-    y, sr = librosa.load("temp_audio_input", sr=None)
+    y, sr = librosa.load("temp_audio_input.wav", sr=None)
     y = librosa.util.normalize(y)
     
     stft = np.abs(librosa.stft(y))
@@ -55,17 +74,18 @@ def analyze_resonance_praat(audio_bytes, is_female=False):
     norm_scores = (raw_scores / (np.sum(raw_scores) + 1e-6)) * 100
     return norm_scores.astype(int)
 
-# 4. 분석 결과 출력 및 시각화
-if audio_file is not None:
-    st.audio(audio_file)
+# 5. 녹음 완료 후 즉시 분석 실행
+if audio_bytes:
+    st.audio(audio_bytes, format="audio/wav")
+    
     with st.spinner("Praat 음향학 엔진으로 5대 공명을 정밀 분석 중입니다..."):
         try:
-            scores = analyze_resonance_praat(audio_file.read(), is_female=("여성" in gender))
+            scores = analyze_resonance_praat(audio_bytes, is_female=("여성" in gender))
             categories = ['가슴(Chest)', '입천장(Palate)', '이빨/전방(Teeth)', '비강(Nasal)', '두개골(Head)']
             
-            st.success("✅ 분석 완료!")
+            st.success("✅ 진단이 완료되었습니다!")
             
-            # 5축 거미줄 레이더 차트
+            # 5축 레이더 차트
             fig = go.Figure(go.Scatterpolar(
                 r=list(scores) + [scores[0]],
                 theta=categories + [categories[0]],
