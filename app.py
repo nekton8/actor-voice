@@ -150,14 +150,20 @@ elif st.session_state.step == 2:
     </script>
     """
 
-    # 컴포넌트 호출 및 값 수신
+    # 컴포넌트 호출 및 안전한 타입 변환 데이터 수신
     rec_val = components.html(custom_recorder_code, height=230)
 
     if rec_val:
-        st.session_state.audio_bytes = base64.b64decode(rec_val)
+        try:
+            if isinstance(rec_val, str):
+                st.session_state.audio_bytes = base64.b64decode(rec_val)
+            elif isinstance(rec_val, bytes):
+                st.session_state.audio_bytes = rec_val
+        except Exception as e:
+            st.error(f"음성 데이터 수신 중 오류: {e}")
 
     if st.session_state.audio_bytes is not None:
-        st.success("✅ 5초 녹음이 정상 수신되었습니다! 들어보신 후 분석을 진행하세요.")
+        st.success("✅ 5초 녹음이 정상적으로 완수되었습니다! 아래에서 미리 들어보실 수 있습니다.")
         st.audio(st.session_state.audio_bytes, format="audio/wav")
         
         col1, col2 = st.columns(2)
@@ -247,3 +253,4 @@ elif st.session_state.step == 3:
         st.session_state.step = 1
         st.session_state.audio_bytes = None
         st.rerun()
+    
