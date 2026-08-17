@@ -53,26 +53,26 @@ if st.session_state.step == 1:
         st.rerun()
 
 # ==========================================
-# PAGE 2: 5초 자동 종료 카운트다운 녹음
+# PAGE 2: 5초 대형 빨간 버튼 카운트다운 녹음
 # ==========================================
 elif st.session_state.step == 2:
-    st.markdown('<div class="step-header">STEP 2. 발성 녹음 진행 (5초 자동 녹음)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="step-header">STEP 2. 발성 녹음 진행 (5초 자동 카운트다운)</div>', unsafe_allow_html=True)
     
     st.markdown("""
         <div class="guide-card">
             <b>📌 정확한 분석을 위한 3가지 수칙</b><br><br>
             1. <b>마이크 거리:</b> 스마트폰/마이크를 입에서 <b>주먹 하나 거리(약 15cm)</b> 띄우세요.<br>
             2. <b>발성 방법:</b> 가장 편안한 톤으로 <b>"에---"</b> 소리를 끊기지 않게 일정하게 내세요.<br>
-            3. <b>녹음 자동 종료:</b> 버튼을 누르면 <b>5초 카운트다운 후 자동으로 중지</b>됩니다.
+            3. <b>녹음 시간:</b> 빨간 버튼을 누르면 <b>5초 카운트다운 후 자동으로 녹음이 종료</b>됩니다.
         </div>
     """, unsafe_allow_html=True)
 
-    st.subheader("🎙️ 5초 자동 카운트다운 녹음")
-    st.caption("아래 빨간색 버튼을 누르면 5초 카운트다운이 시작되며 5초 후 자동으로 멈춥니다.")
+    st.subheader("🎙️ 5초 자동 녹음")
+    st.caption("아래 빨간색 원형 버튼을 클릭하면 5초 카운트다운이 시작됩니다.")
 
-    # 5초 타이머 및 자동 중지 내장 HTML/JS 엔진
+    # 안정화된 5초 카운트다운 웹 컴포넌트
     custom_recorder_code = """
-    <div style="text-align: center; padding: 15px; font-family: sans-serif;">
+    <div style="text-align: center; padding: 10px; font-family: sans-serif;">
         <button id="recBtn" onclick="startRec()" style="
             width: 140px;
             height: 140px;
@@ -80,14 +80,15 @@ elif st.session_state.step == 2:
             background-color: #E74C3C;
             color: white;
             border: 4px solid #C0392B;
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
+            transition: all 0.2s ease;
         ">🎙️<br>녹음 시작</button>
         
         <div id="countdown" style="
-            font-size: 36px;
+            font-size: 34px;
             font-weight: 800;
             color: #E74C3C;
             margin-top: 15px;
@@ -114,7 +115,7 @@ elif st.session_state.step == 2:
                 const blob = new Blob(chunks, { type: 'audio/wav' });
                 const reader = new FileReader();
                 reader.onloadend = () => {
-                    const base64data = reader.result.split(',')[1];
+                    const base64data = reader.result; // data:audio/wav;base64,... 전체 전달
                     window.parent.postMessage({ type: 'streamlit:setComponentValue', value: base64data }, '*');
                 };
                 reader.readAsDataURL(blob);
@@ -150,16 +151,24 @@ elif st.session_state.step == 2:
     </script>
     """
 
-    # 컴포넌트 호출 및 값 수신
     rec_val = components.html(custom_recorder_code, height=230)
 
-    if rec_val:
-        st.session_state.audio_bytes = base64.b64decode(rec_val)
+    # 파이썬 수신부 예외처리 강화
+    if rec_val and isinstance(rec_val, str) and "base64," in rec_val:
+        try:
+            base64_str = rec_val.split("base64,")[1]
+            st.session_state.audio_bytes = base64.b64decode(base64_str)
+            st.rerun()
+        except Exception as e:
+            st.error(f"오디오 변환 예외: {e}")
 
+    # 녹음 데이터 존재 시 들어보기 플레이어 및 버튼 표출
     if st.session_state.audio_bytes is not None:
-        st.success("✅ 5초 녹음이 정상 수신되었습니다! 들어보신 후 분석을 진행하세요.")
+        st.write("")
+        st.success("✅ 5초 녹음이 완성되었습니다! 아래에서 미리 들어보실 수 있습니다.")
         st.audio(st.session_state.audio_bytes, format="audio/wav")
         
+        st.write("")
         col1, col2 = st.columns(2)
         with col1:
             if st.button("🔄 다시 녹음하기", use_container_width=True):
