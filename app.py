@@ -17,12 +17,12 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# 단계별 세션 상태 초기화
-if 'step' not in st.state_session:
+# 오타 수정된 세션 상태 초기화 (st.session_state)
+if 'step' not in st.session_state:
     st.session_state.step = 1
-if 'gender' not in st.state_session:
+if 'gender' not in st.session_state:
     st.session_state.gender = "남성 (Male)"
-if 'audio_bytes' not in st.state_session:
+if 'audio_bytes' not in st.session_state:
     st.session_state.audio_bytes = None
 
 # 상단 헤더 (공통)
@@ -57,7 +57,6 @@ if st.session_state.step == 1:
 elif st.session_state.step == 2:
     st.markdown('<div class="step-header">STEP 2. 발성 녹음 진행</div>', unsafe_allow_html=True)
     
-    # 교수님 요청 수칙 안내 메세지
     st.markdown("""
         <div class="guide-card">
             <b>📌 정확한 분석을 위한 3가지 수칙</b><br><br>
@@ -70,7 +69,6 @@ elif st.session_state.step == 2:
     st.subheader("🎙️ 녹음하기")
     st.caption("아래 마이크 버튼을 눌러 녹음을 시작하고, 종료 시 한 번 더 눌러주세요.")
     
-    # 마이크 녹음 위젯 (녹음 진행 타임 바 내장)
     recorded_audio = audio_recorder(
         text="버튼을 눌러 녹음 시작/중지",
         recording_color="#e8b62c",
@@ -134,7 +132,7 @@ elif st.session_state.step == 3:
         # 감도 가중치 보정
         raw_scores = np.array([chest_e * 0.7, palate_e * 1.8, teeth_e * 2.8, nasal_e * 4.2, head_e * 5.5])
         
-        # 총합 100% 기준 퍼센트 정규화
+        # 총합 100% 기준 비율 정규화
         norm_scores = (raw_scores / (np.sum(raw_scores) + 1e-6)) * 100
         return norm_scores.astype(int)
 
@@ -159,14 +157,14 @@ elif st.session_state.step == 3:
             )
             st.plotly_chart(fig, use_container_width=True)
 
-            # 100% 기준 각 공명 비율 수치표
+            # 100% 기준 수치표
             st.write("📊 **5대 공명 점수 비율 (총합 100% 기준)**")
             cols = st.columns(5)
             labels = ["가슴", "입천장", "이빨/전방", "비강", "두개골"]
             for idx, col in enumerate(cols):
                 col.metric(labels[idx], f"{scores[idx]} %")
 
-            # 간단 피드백
+            # 피드백
             st.divider()
             max_idx = np.argmax(scores)
             st.info(f"💡 현재 발성에서 가장 발달된 공명은 **[{labels[max_idx]} 공명 ({scores[max_idx]}%)]**입니다.")
