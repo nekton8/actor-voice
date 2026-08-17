@@ -67,21 +67,22 @@ elif st.session_state.step == 2:
     """, unsafe_allow_html=True)
 
     st.subheader("🎙️ 실시간 음성 녹음")
-    st.caption("아래 대형 마이크 버튼을 누르면 녹음이 시작되며, 녹음 중에는 깜빡입니다.")
+    st.caption("아래 대형 마이크 버튼을 누르면 녹음이 시작되며, 5초 동안 넉넉하게 발성해 주세요.")
 
-    # 100% 데이터 전달 보장 마이크 위젯
+    # pause_threshold를 5.0초로 늘려 중간 무음으로 인해 2~3초 만에 꺼지는 현상 방지
     recorded_audio = audio_recorder(
         text="마이크를 눌러 녹음 시작 / 중지",
         recording_color="#e8b62c",
         neutral_color="#1F77B4",
         icon_name="microphone",
         icon_size="4x",
+        pause_threshold=5.0,
     )
 
     if recorded_audio:
         st.session_state.audio_bytes = recorded_audio
 
-    # 데이터 수신 즉시 아래 요소들 정확히 노출
+    # 녹음 완료 시 플레이어 및 버튼 노출
     if st.session_state.audio_bytes is not None:
         st.write("")
         st.success("✅ 녹음이 완료되었습니다! 아래에서 미리 들어보실 수 있습니다.")
